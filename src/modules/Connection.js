@@ -7,26 +7,25 @@
  * Connection.checkConnection().type
  */
 
-var EventBus = require("./EventBus");
-var bus = new EventBus();
-var BROWSER = true;
+import bus from './EventBus';
+var UNSUPPORTED = true;
 
 var connectionStatus = {    
-    type:"none", // wifi, 3g, 4g, none
-    networkState:"none" // online|offline
+    type: 'none', // wifi, 3g, 4g, none
+    networkState: 'none' // online|offline
 };
 
 function addListener(type, listener){    
-    if(type == "connectionchange"){       
+    if (type === "connectionchange"){       
         bus.on(type, listener);
     }
-};
+}
 
 function removeListener(type, listener){    
-    if(type == "connectionchange"){       
+    if (type === "connectionchange"){       
         bus.remove(type, listener);
     }
-};
+}
 
 function updateConnectionStatus(theEvent){
     connectionStatus.type = navigator.connection ? navigator.connection.type : "none";
@@ -35,10 +34,10 @@ function updateConnectionStatus(theEvent){
 }
 
 function bindConnectionEvents(){
-    if(BROWSER){
+    if(UNSUPPORTED){
         // For some reasons document.addEventListener 
         // does not work in browsers (Safari, Chrome only works with window, FF both)
-        // on cordova you MUST use document.addEventListener (only with FF works in both way)        
+        // on cordova you MUST use document.addEventListener       
         window.addEventListener("offline", updateConnectionStatus, false);
         window.addEventListener("online", updateConnectionStatus, false);
     } else {
@@ -49,54 +48,58 @@ function bindConnectionEvents(){
 
 function initialize(){
     // call after device ready
-    try{
-        if(window.navigator.connection){
+    try {
+        if (window.navigator.connection){
             connectionStatus.type = window.navigator.connection.type;
             
-            if(window.navigator.connection.type !== "none"){
+            if (window.navigator.connection.type !== "none"){
                 connectionStatus.networkState = "online";
             }
-            BROWSER = false;
+            UNSUPPORTED = false;
         }
-    }catch(e){
-        // Browser case or plugin cordova not installed
-        BROWSER = true;
+    } catch (e){
+        // Browser case, unsupported or plugin cordova not installed
+        UNSUPPORTED = true;
         connectionStatus.networkState = navigator.onLine ? "online" : "offline";
+    } finally {        
+        bindConnectionEvents();
     }
-    
-    bindConnectionEvents();
 }
 
+/**
+ * Host reachable make a simple HEAD request 
+ * to location.hostname
+ * with a param to disable the cache
+ * @returns {Boolean}
+ */
 function hostReachable() {
-
   // Handle IE and more capable browsers
-  var xhr = new ( window.ActiveXObject || XMLHttpRequest )( "Microsoft.XMLHTTP" );
-  var status;
+    var xhr = new ( window.ActiveXObject || XMLHttpRequest )( "Microsoft.XMLHTTP" );  
 
   // Open new request as a HEAD to the root hostname with a random param to bust the cache
-  xhr.open("HEAD", "//" + window.location.hostname + "/?rand=" + Math.floor((1 + Math.random()) * 0x10000), false);
+    xhr.open("HEAD", "//" + window.location.hostname + "/?rand=" + Math.floor((1 + Math.random()) * 0x10000), false);
 
   // Issue request and handle response
-  try {
-    xhr.send();
-    return ( xhr.status >= 200 && (xhr.status < 300 || xhr.status === 304) );
-  } catch (error) {
-    return false;
-  }
+    try {
+        xhr.send();
+        return (xhr.status >= 200 && (xhr.status < 300 || xhr.status === 304));
+    } catch (error) {
+        return false;
+    }
 
 }
 
 function checkConnection(){
-    if(BROWSER){
-        connectionStatus.networkState = navigator.onLine ? "online" : "offline";
+    if (UNSUPPORTED){
+        connectionStatus.networkState = navigator.onLine ? 'online' : 'offline';
     }
     return connectionStatus;
 }
 
-module.exports = {
-    removeListener:removeListener,
-    addListener:addListener,
-    initialize:initialize,
-    checkConnection:checkConnection,
-    hostReachable:hostReachable
-}
+export default {
+    removeListener,
+    addListener,
+    initialize,
+    checkConnection,
+    hostReachable
+};

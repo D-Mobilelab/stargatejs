@@ -21,8 +21,8 @@ function SimulateEvent(eventName, attrs, time, target){
 
 function mockCordovaConnection(){
     window.navigator.connection = {
-        type:"wifi",
-        getInfo:function(cbs, cbe){}
+        type:'wifi',
+        getInfo: (cbs, cbe) => {}
     }    
 }
 
@@ -30,8 +30,8 @@ function unmockCordovaConnection(){
     window.navigator.connection = null;
 }
 
-module.exports = {
-    SimulateEvent:SimulateEvent,
-    mockCordovaConnection:mockCordovaConnection,
-    unmockCordovaConnection:unmockCordovaConnection
+export {
+    SimulateEvent,
+    mockCordovaConnection,
+    unmockCordovaConnection
 }

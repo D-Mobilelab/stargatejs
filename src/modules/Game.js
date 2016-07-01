@@ -1,36 +1,29 @@
-"use strict";
-var Promise = require("promise-polyfill");
+import Promise from 'promise-polyfill';
+import Logger from './Logger';
+import fileModule from './File';
+import { jsonpRequest } from './Http';
+import { extend, 
+         queryfy 
+} from './Utils';
 
-/**
- * Game module needs cordova-plugin-file cordova-plugin-file-transfer
- * @module src/modules/Game
- * @type {Object} 
- */
-var Logger = require("./Logger");
-var fileModule = require("./File");
-var http = require("./Http");
-var extend = require("./Utils").extend;
-var querify = require("./Utils").queryfy;
+var composeApiString = queryfy;
 
-var composeApiString = queryfy,    
-    jsonpRequest = http.jsonpRequest;
-
-    var baseDir,
-        cacheDir,
-        tempDirectory,
-        constants = {},
-        wwwDir,
-        dataDir,
-        stargatejsDir,
-        CONF = {
-            sdk_url:"",
-            dixie_url:"",
-            api:"",
-            ga_for_game_url:"",
-            gamifive_info_api:"",
-            bundle_games:[]
-        },
-        downloading = false;
+var baseDir,
+    cacheDir,
+    tempDirectory,
+    constants = {},
+    wwwDir,
+    dataDir,
+    stargatejsDir,
+    CONF = {
+        sdk_url:"",
+        dixie_url:"",
+        api:"",
+        ga_for_game_url:"",
+        gamifive_info_api:"",
+        bundle_games:[]
+    },
+    downloading = false;
 
     var emptyOfflineData = {
         GaForGame: {},
@@ -63,7 +56,7 @@ var composeApiString = queryfy,
         "check_compatibility_header":0
     };
 
-    var LOG = new Logger("ALL", "[Game - module]", {background:"black",color:"#5aa73a"});
+    var LOG = new Logger("ALL", "[Game - module]", { background: "black",color: "#5aa73a" });
 
     /**
      * @constructor
@@ -110,16 +103,16 @@ var composeApiString = queryfy,
         }
         LOG.d("Initialized called with:", CONF);
 
-        if(!fileModule){return Promise.reject("Missing file module!");}
+        if(!fileModule){ return Promise.reject("Missing file module!"); }
 
-        try{
+        try {
             baseDir = window.cordova.file.applicationStorageDirectory;
             cacheDir = window.cordova.file.cacheDirectory;
             tempDirectory = window.cordova.file.tempDirectory;
             wwwDir = window.cordova.file.applicationDirectory + "www/";
             stargatejsDir = window.cordova.file.applicationDirectory + "www/js/stargate.js";
             dataDir = window.cordova.file.dataDirectory;
-        }catch(reason){
+        } catch (reason){
             LOG.e(reason);
             return Promise.reject(reason);
         }
@@ -1046,4 +1039,4 @@ var composeApiString = queryfy,
             });
     }
 
-module.exports = new Game;    
+module.exports = new Game();

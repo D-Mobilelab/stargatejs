@@ -41,7 +41,7 @@ describe("Utils tests", function(){
         },600);
     });
     
-   it("Test Connection online if it's cordova-network-information defined", function(done){
+   it("Test Connection online if cordova-network-information is defined", function(done){
         mockCordovaConnection();
         connection.initialize();
         
@@ -65,15 +65,15 @@ describe("Utils tests", function(){
         connection.addListener("connectionchange", onchange);
         
         //mock it
-        window.navigator.connection.type = "none";
+        window.navigator.connection.type = "wifi";
         
         // Simulate Event
         SimulateEvent("offline", {type:"offline"}, 1, "document");
         
         setTimeout(function(){
-            expect(onchange).toHaveBeenCalledWith({type:"none",networkState:"offline"});;
-            unmockCordovaConnection();
+            expect(onchange).toHaveBeenCalledWith({type:"wifi",networkState:"offline"});            
             done();
-        },600);
+            unmockCordovaConnection();
+        }, 600);
     });
 });

@@ -1,4 +1,4 @@
-var Http = require("../src/modules/Http").Http;
+import {Http} from '../src/modules/Http';
 
 require('jasmine-ajax');
 

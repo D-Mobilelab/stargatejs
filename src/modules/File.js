@@ -1,5 +1,5 @@
-"use strict";
-var Promise = require("promise-polyfill");
+import Promise from 'promise-polyfill';
+import Logger from './Logger';
 /**
  * File module
  * @module src/modules/File
@@ -8,9 +8,9 @@ var Promise = require("promise-polyfill");
  * @requires ./Utils.js
  */
 var File = {};
-var Logger = require("./Logger");
-File.LOG = new Logger("ALL", "[File - module]");
-window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+File.LOG = new Logger('ALL', '[File - module]');
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
 /**
  * ERROR_MAP
@@ -440,4 +440,4 @@ function __transform(entries){
     return (arr.length == 1) ? arr[0] : arr;
 }
 
-module.exports = File;
+export default File;

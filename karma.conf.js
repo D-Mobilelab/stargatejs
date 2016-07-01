@@ -10,7 +10,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine','browserify'],
+    frameworks: ['jasmine', 'browserify'],
 
     // list of files / patterns to load in the browser
     files: [
@@ -57,7 +57,7 @@ module.exports = function(config) {
 
     browserify: {
       debug: true,
-      transform: ['browserify-istanbul']
+      transform: ['babelify']
     },
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher

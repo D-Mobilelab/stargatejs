@@ -15,7 +15,7 @@ var connection = require("./Connection");
  * */
 function getJSON(url){
     url = encodeURI(url);
-    var xhr = typeof XMLHttpRequest != 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+    var xhr = typeof XMLHttpRequest !== 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 
     var responseTypeAware = 'responseType' in xhr;
 
@@ -26,11 +26,12 @@ function getJSON(url){
 
     var daRequest = new Promise(function(resolve, reject){
         xhr.onreadystatechange = function(){
+            var result;
             if (xhr.readyState === 4) {
-                try{
-                    var result = responseTypeAware ? xhr.response : JSON.parse(xhr.responseText);
+                try {
+                    result = responseTypeAware ? xhr.response : JSON.parse(xhr.responseText);
                     resolve(result);
-                }catch(e){
+                } catch (e){
                     reject(e);
                 }
             }
@@ -59,7 +60,7 @@ function jsonpRequest(url){
     var self = this;
     self.timeout = 3000;
     self.called = false;
-    if(window.document) {
+    if (window.document) {
         var ts = Date.now();
         self.scriptTag = window.document.createElement("script");
         url += "&callback=window.__jsonpHandler_" + ts;
@@ -127,10 +128,10 @@ function getImageRaw(options, _onProgress){
         var transferCanceled = reject;
         var transferFailed = reject;
 
-        request.addEventListener("progress", onProgress, false);
-        request.addEventListener("load", transferComplete, false);
-        request.addEventListener("error", transferFailed, false);
-        request.addEventListener("abort", transferCanceled, false);
+        request.addEventListener('progress', onProgress, false);
+        request.addEventListener('load', transferComplete, false);
+        request.addEventListener('error', transferFailed, false);
+        request.addEventListener('abort', transferCanceled, false);
 
         request.send(null);
     });
@@ -138,25 +139,25 @@ function getImageRaw(options, _onProgress){
 }
 
 var defaultOptions = {
-    method:"GET",
-    url:"",
-    attempt:1,
-    responseType:"json", //json, document, "", text, blob, arraybuffer the the type of response expected
-    dataType:"json", // the type of data sent(if any)
-    callback:function(){},
-    headers:{},
-    data:null,
-    withCredentials:false, // Enable cors if supported
-    async:true,
-    mimeType:"", // image/png"|"image/jpeg|text/plain mimeType only used when responseType is blob!
-    retryAfter:0, //ms, used if attempt > 1
-    onProgress:function(){}
+    method: 'GET',
+    url: '',
+    attempt: 1,
+    responseType: 'json', // json, document, "", text, blob, arraybuffer
+    dataType: 'json', // the type of data sent(if any)
+    callback: function(){},
+    headers: {},
+    data: null,
+    withCredentials: false, // Enable cors if supported
+    async: true,
+    mimeType: '', // image/png"|"image/jpeg|text/plain mimeType only used when responseType is blob!
+    retryAfter: 0, // ms, used if attempt > 1
+    onProgress: function(){}
 };
 
 /**
  * The Http class
  * @constructor
- * @alias module:src/Http.request
+ * @alias module:src/Http
  * @param {Object} requestParams - object where you can specify the options of the request
  * @param {String} [requestParams.type=POST] - the type of the request: possible values POST, GET, PUT, DELETE
  * @param {String} requestParams.url - the url to request for
@@ -166,25 +167,25 @@ var defaultOptions = {
  * @returns {Promise}
  * */
 function Http(options, callback){  
-  var self = this;
-  this.options = extend(defaultOptions, options);  
-  this.calls = [];
-  this.callback = callback || function(){};
-  this.promise = new Promise(function(resolve, reject){
-  	self.do(resolve, reject);
-  }); 
+    var self = this;
+    this.options = extend(defaultOptions, options);  
+    this.calls = [];
+    this.callback = callback || function(){};
+    this.promise = new Promise(function(resolve, reject){
+        self.do(resolve, reject);
+    });
 }
 
 Http.prototype.do = function(resolve, reject){
 	var self = this;
-	if(this.options.attempt === 0){      
-      var lastCall = this.calls[this.calls.length - 1];
-      reject({status:lastCall.status, statusText:lastCall.statusText});
-      self.callback(lastCall.status);
-      clearTimeout(self.timeoutID);
-      self.timeoutID = null;
-  	  return;
-  }
+	if (this.options.attempt === 0){      
+        var lastCall = this.calls[this.calls.length - 1];
+        reject({status: lastCall.status, statusText: lastCall.statusText});
+        self.callback(lastCall.status);
+        clearTimeout(self.timeoutID);
+        self.timeoutID = null;
+        return;
+    }
   
   var xhr;
   if (Http.isXMLHttpRequestSupported()) {
@@ -231,7 +232,7 @@ Http.prototype.do = function(resolve, reject){
   xhr.onreadystatechange = function(event){
   		if (xhr.readyState === xhr.DONE) {
             if (xhr.status >= 200 && xhr.status < 400) {                    
-                if(xhr.responseType === "blob"){
+                if (xhr.responseType === "blob"){
                     LOG.d("BLOB CASE!");
                     
                     // try to infer mimetype from extension?
@@ -305,8 +306,10 @@ function parseResponse(xhr){
  }
 
 function addCustomHeaders(headersObj, xhr){
-    for(var k in headersObj){
-        xhr.setRequestHeader(k, headersObj[k]);
+    for (var k in headersObj){
+        if (headersObj.hasOwnProperty(k)){
+            xhr.setRequestHeader(k, headersObj[k]);           
+        }
     }
 }
 
@@ -316,7 +319,7 @@ Http.isXMLHttpRequestSupported = function() {
 };
 
 Http.isCORSSupported = function() {
-    return "withCredentials" in new XMLHttpRequest;
+    return 'withCredentials' in new XMLHttpRequest;
 };
 
 Http.isXDomainSupported = function() {

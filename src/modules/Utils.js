@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /**
  * Iterator
  *
@@ -16,11 +16,11 @@ function Iterator(array){
     var nextIndex = 0;
 
     return {
-        next: function(reset){
-            if(reset){nextIndex = 0;}
+        next: (reset) => {
+            if (reset){ nextIndex = 0; }
             return nextIndex < array.length ?
-            {value: array[nextIndex++], done: false} :
-            {done: true};
+            { value: array[nextIndex++], done: false } :
+            { done: true };
         }
     };
 }
@@ -33,24 +33,35 @@ function Iterator(array){
  * var API = "http://jsonplaceholder.typicode.com/comments"
  * var url = composeApiString(API, {postId:1});
  * // url will be "http://jsonplaceholder.typicode.com/comments?postId=1"
- * @param {Strinq} api
+ * @param {Strinq} _api
  * @param {Object} params - a key value object: will be append to <api>?key=value&key2=value2
  * @returns {String} the string composed
  * */
-function composeApiString(api, params){
-    api += "?";
-    var qs = "";    
-    for(var key in params){                
+function queryfy(_api, query){
+    var previousQuery = dequeryfy(_api);
+    var qs = '', 
+        finalQuery,
+        api = _api.slice(0);
+    
+
+    if (api.indexOf('?') > -1){
+        api = api.slice(0, api.indexOf('?'));        
+    }
+
+    api += '?';    
+    finalQuery = extend(previousQuery, query);
+
+    for (var key in finalQuery){                
         qs += encodeURIComponent(key);
         // if a value is null or undefined keep the key without value
-        if(params[key]){qs += "=" + encodeURIComponent(params[key]);}
-        qs += "&";
+        if (finalQuery[key]){ qs += '=' + encodeURIComponent(finalQuery[key]); }
+        qs += '&';
     }
     
     if (qs.length > 0){
-        qs = qs.substring(0, qs.length-1); //chop off last
+        qs = qs.substring(0, qs.length - 1); // chop off last
     }
-    return api + qs;
+    return [api, qs].join('');
 }
 
 /**
@@ -60,19 +71,19 @@ function composeApiString(api, params){
  * @example
  * var url = "http://jsonplaceholder.typicode.com/comments?postId=1
  * var obj = dequerify(url); //obj is {"postId":"1"} 
- * @param {Strinq} param 
- * @returns {Object} the object with key-value pairs
+ * @param {Strinq} _url 
+ * @returns {Object} the object with key-value pairs, empty if no querystring is present
  * */
-function dequeryfy(param){
-    param = decodeURIComponent(param);
+function dequeryfy(_url){
+    var param = decodeURIComponent(_url.slice(0));
     
-    var query = param.split("?")[1];
-    if(!query){return false;}
+    var query = param.split('?')[1];
+    if (!query){ return {}; }
     
-    var keyvalue = query.split("&");
+    var keyvalue = query.split('&');
     
-    return keyvalue.reduce(function(newObj, keyvalue){
-        var splitted = keyvalue.split("=");
+    return keyvalue.reduce((newObj, _keyvalue) => {
+        var splitted = _keyvalue.split('=');
         var key = splitted[0];
         var value = splitted[1];
         newObj[key] = value;
@@ -92,18 +103,18 @@ function dequeryfy(param){
 function extend(o1, o2){
 
     var isObject = Object.prototype.toString.apply({});
-    if((o1.toString() !== isObject) || (o2.toString() !== isObject)) {
-        throw new Error("Cannot merge different type");
+    if ((o1.toString() !== isObject) || (o2.toString() !== isObject)) {
+        throw new Error('Cannot merge different type');
     }
     var newObject = {};
     for (var k in o1){
-        if(o1.hasOwnProperty(k)){
+        if (o1.hasOwnProperty(k)){
             newObject[k] = o1[k];
         }
     }
 
     for (var j in o2) {
-        if(o2.hasOwnProperty(j)){
+        if (o2.hasOwnProperty(j)){
             newObject[j] = o2[j];
         }
     }
@@ -111,15 +122,13 @@ function extend(o1, o2){
 }
 
 function getType(obj){
-   return ({}).toString.call(obj).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();    
+    return ({}).toString.call(obj).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();    
 }
 
-var exp = {
-    Iterator:Iterator,
-    extend:extend,
-    queryfy:composeApiString,
-    dequeryfy:dequeryfy,
-    getType:getType
-};
-
-module.exports = exp;
+export {
+    Iterator,
+    extend,
+    queryfy,
+    dequeryfy,
+    getType
+}

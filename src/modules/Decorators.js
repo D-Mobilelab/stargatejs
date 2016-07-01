@@ -9,15 +9,15 @@
  * @throws {Error}
  * @returns {Function} 
  */
-function requireCondition(param, afterFunction, context, message, type){ 
+function requireCondition(param, afterFunction, context = null, message, type){ 
 	return function(){
-        if(typeof param === "function"){
+        if (typeof param === 'function'){
             param = param.call(null);
         }
-		if(param){
-			return afterFunction.apply(context || null, arguments); 
+		if (param){
+			return afterFunction.apply(context, arguments); 
 		} else {
-			switch(type){
+			switch (type){
 				case "error":
 					throw new Error(message);
 					break;
@@ -30,13 +30,10 @@ function requireCondition(param, afterFunction, context, message, type){
 				default:
 					console.log(message);
 					break;
-			}
-			
+			}			
 		}
 	};
 }
 
 
-module.exports = {
-	requireCondition:requireCondition	
-}
+export { requireCondition };
