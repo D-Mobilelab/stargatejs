@@ -1,4 +1,4 @@
-"use strict";
+import bus from './EventBus';
 /**
  * Usage
  * Connection.initialize();
@@ -6,8 +6,6 @@
  * Connection.checkConnection().networkState
  * Connection.checkConnection().type
  */
-
-import bus from './EventBus';
 var UNSUPPORTED = true;
 
 var connectionStatus = {    
@@ -16,21 +14,21 @@ var connectionStatus = {
 };
 
 function addListener(type, listener){    
-    if (type === "connectionchange"){       
+    if (type === 'connectionchange'){       
         bus.on(type, listener);
     }
 }
 
 function removeListener(type, listener){    
-    if (type === "connectionchange"){       
-        bus.remove(type, listener);
+    if (type === 'connectionchange'){       
+        bus.off(type, listener);
     }
 }
 
 function updateConnectionStatus(theEvent){
     connectionStatus.type = navigator.connection ? navigator.connection.type : "none";
     connectionStatus.networkState = theEvent.type;
-    bus.trigger("connectionchange", connectionStatus);    
+    bus.trigger('connectionchange', connectionStatus);    
 }
 
 function bindConnectionEvents(){
@@ -74,7 +72,7 @@ function initialize(){
  */
 function hostReachable() {
   // Handle IE and more capable browsers
-    var xhr = new ( window.ActiveXObject || XMLHttpRequest )( "Microsoft.XMLHTTP" );  
+    var xhr = new (window.ActiveXObject || XMLHttpRequest )('Microsoft.XMLHTTP');  
 
   // Open new request as a HEAD to the root hostname with a random param to bust the cache
     xhr.open("HEAD", "//" + window.location.hostname + "/?rand=" + Math.floor((1 + Math.random()) * 0x10000), false);

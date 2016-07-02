@@ -1,13 +1,13 @@
 import eventBus from '../src/modules/EventBus';
 
-fdescribe('EventBus tests', () => {    
+describe('EventBus tests', () => {    
     
     beforeEach(() => {
         
     });
 
     afterEach(() => {
-        eventBus.events = {};
+        eventBus.events.connectionchange = [];
     });
     
     it('EventBus should trigger with custom data', () => {
@@ -23,10 +23,10 @@ fdescribe('EventBus tests', () => {
         
         eventBus.trigger('connectionchange', 'param1', [], {});
         
-        expect(eventBus.events.connectionchange).toBeDefined();
-        expect(eventBus.events.connectionchange.length).toEqual(1);
+        expect(eventBus.events.connectionchange).toBeDefined();        
         expect(callbacks.callback).toHaveBeenCalled();
         expect(callbacks.callback).toHaveBeenCalledWith('param1', [], {});
+        expect(callbacks.callback).toHaveBeenCalledTimes(1);
         
     });
 
@@ -41,8 +41,7 @@ fdescribe('EventBus tests', () => {
         spyOn(callbacks, 'callback');
         
         // Add a callback
-        eventBus.on('connectionchange', callbacks.callback);
-        expect(callbacks.callback).toHaveBeenCalledWith('param1', [], {});
+        eventBus.on('connectionchange', callbacks.callback);        
         
         // Remove a callback
         eventBus.off('connectionchange', callbacks.callback);

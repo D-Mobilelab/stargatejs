@@ -1,79 +1,82 @@
-var connection = require("../src/modules/Connection");
-var SimulateEvent = require("./helpers/helpers").SimulateEvent;
-var mockCordovaConnection = require("./helpers/helpers").mockCordovaConnection;
-var unmockCordovaConnection = require("./helpers/helpers").unmockCordovaConnection;
+import connection from '../src/modules/Connection';
+import simulateEvent from './helpers/SimulateEvent';
+import netInfoMock from './helpers/cordova-plugin-network-information';
 
-describe("Utils tests", function(){    
-    
-    beforeEach(function() {
-    
+describe('Utils tests', () => {
+
+    beforeEach(() => {
+        // netInfoMock.install();
     });
 
-    afterEach(function() {
-    
+    afterEach(() => {
+        // netInfoMock.uninstall();
     });
-    
-    it("Test ConnectionChange offline if it's a browser", function(done){
+
+    it("Test ConnectionChange offline if it's a browser", (done) =>{
         connection.initialize();
-        
-        var onchange = jasmine.createSpy("connchange");
-        connection.addListener("connectionchange", onchange);
-        
-        SimulateEvent("offline", {type:"offline"}, 1, "document");
-        
-        setTimeout(function(){
-            expect(onchange).toHaveBeenCalledWith({type:"none",networkState:"offline"});;
+
+        var onchange = jasmine.createSpy('connchange');
+        connection.addListener('connectionchange', onchange);
+
+        simulateEvent('offline', { type: 'offline' }, 1, 'document');
+
+        setTimeout(() => {
+            expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'offline' });
+            connection.removeListener('connectionchange', onchange);
             done();
-        },600);
+        }, 600);
     });
-    
-    it("Test Connection online if it's a browser", function(done){
+
+    it('Test Connection online if it\'s a browser', (done) => {
         connection.initialize();
-        
+
         var onchange = jasmine.createSpy("connchange");
         connection.addListener("connectionchange", onchange);
-        
-        SimulateEvent("online", {type:"online"}, 1, "document");
-        
+
+        simulateEvent('online', { type:"online" }, 1, 'document');
+
         setTimeout(function(){
-            expect(onchange).toHaveBeenCalledWith({type:"none",networkState:"online"});;
+            expect(onchange).toHaveBeenCalledWith({ type: "none", networkState: "online" });
+            connection.removeListener("connectionchange", onchange);
             done();
-        },600);
+        }, 600);
     });
-    
-   it("Test Connection online if cordova-network-information is defined", function(done){
-        mockCordovaConnection();
+
+   it("Test Connection online if cordova-network-information is defined", (done) => {
+        netInfoMock.install();
         connection.initialize();
-        
+
         var onchange = jasmine.createSpy("connchange");
         connection.addListener("connectionchange", onchange);
-        
-        SimulateEvent("online", {type:"online"}, 1, "document");
-        
-        setTimeout(function(){
-            expect(onchange).toHaveBeenCalledWith({type:"wifi",networkState:"online"});;
-            unmockCordovaConnection();
+
+        simulateEvent('online', { type: 'online' }, 1, 'document');
+
+        setTimeout(() => {
+            expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'online' });
+            netInfoMock.uninstall();
+            connection.removeListener('connectionchange', onchange);
             done();
-        },600);
+        }, 600);
     });
-    
-    it("Test Connection offline if it's cordova-network-information defined", function(done){
-        mockCordovaConnection();
+
+    it("Test Connection offline if it's cordova-network-information defined", (done) => {
+        netInfoMock.install();
         connection.initialize();
-        
-        var onchange = jasmine.createSpy("connchange");
-        connection.addListener("connectionchange", onchange);
-        
-        //mock it
-        window.navigator.connection.type = "wifi";
-        
+
+        var onchange = jasmine.createSpy('connchange');
+        connection.addListener('connectionchange', onchange);
+
+        // mock it
+        window.navigator.connection.type = 'wifi';
+
         // Simulate Event
-        SimulateEvent("offline", {type:"offline"}, 1, "document");
-        
-        setTimeout(function(){
-            expect(onchange).toHaveBeenCalledWith({type:"wifi",networkState:"offline"});            
+        simulateEvent('offline', { type: 'offline' }, 1, 'document');
+
+        setTimeout(() => {
+            expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'offline' });
             done();
-            unmockCordovaConnection();
+            connection.removeListener('connectionchange', onchange);
+            netInfoMock.uninstall();
         }, 600);
     });
 });

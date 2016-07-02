@@ -1,4 +1,4 @@
-export const CONFIGURATION = {
+export const DEFAULT_CONFIGURATION = {
     modules: [        
         ['file', {}]/* ,
         ['game', {

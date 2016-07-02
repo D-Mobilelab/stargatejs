@@ -1,11 +1,9 @@
-"use strict";
-var Promise = require("promise-polyfill");
-var Logger = require("./Logger");
-var LOG = new Logger("ALL", "[Request]");
-var extend = require("./Utils").extend;
-var getType = require("./Utils").getType;
-var connection = require("./Connection");
+import Promise from 'promise-polyfill';
+import Logger from './Logger';
+import { getType, extend } from './Utils';
+import connection from './Connection';
 
+var LOG = new Logger("ALL", "[Request]");
 /**
  * getJSON
  *
@@ -147,7 +145,7 @@ var defaultOptions = {
     callback: function(){},
     headers: {},
     data: null,
-    withCredentials: false, // Enable cors if supported
+    withCredentials: false,
     async: true,
     mimeType: '', // image/png"|"image/jpeg|text/plain mimeType only used when responseType is blob!
     retryAfter: 0, // ms, used if attempt > 1
@@ -180,7 +178,7 @@ Http.prototype.do = function(resolve, reject){
 	var self = this;
 	if (this.options.attempt === 0){      
         var lastCall = this.calls[this.calls.length - 1];
-        reject({status: lastCall.status, statusText: lastCall.statusText});
+        reject({ status: lastCall.status, statusText: lastCall.statusText });
         self.callback(lastCall.status);
         clearTimeout(self.timeoutID);
         self.timeoutID = null;
@@ -313,7 +311,7 @@ function addCustomHeaders(headersObj, xhr){
     }
 }
 
-//Static Methods
+// Static Methods
 Http.isXMLHttpRequestSupported = function() {
     return !!window.XMLHttpRequest;
 };

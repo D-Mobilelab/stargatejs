@@ -1,5 +1,6 @@
 import Promise from 'promise-polyfill';
 import Logger from './Logger';
+import { requireCondition } from './Decorators';
 /**
  * File module
  * @module src/modules/File
@@ -163,9 +164,9 @@ File._promiseZip = function(zipPath, outFolder, _onProgress){
     LOG.d("PROMISEZIP:", arguments);
     return new Promise(function(resolve,reject){
         window.zip.unzip(zipPath, outFolder, function(result){
-            if(result === 0){
+            if (result === 0){
                 resolve(true);
-            }else{
+            } else {
                 reject(result);
             }
         }, _onProgress);
@@ -437,7 +438,19 @@ function __transform(entries){
             isDirectory:entry.isDirectory
         };
     });
-    return (arr.length == 1) ? arr[0] : arr;
+    return (arr.length === 1) ? arr[0] : arr;
 }
+
+function checkPlugins(){
+    return window.resolveLocalFileSystemURL && window.zip;
+}
+
+Object.keys(File).map((methodName) => {
+    File[methodName] = requireCondition(checkPlugins, 
+                                        File[methodName], 
+                                        null,
+                                        'Check cordova-plugin-file and zip', 
+                                        'warn');
+});
 
 export default File;

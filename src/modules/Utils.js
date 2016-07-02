@@ -1,4 +1,3 @@
-'use strict';
 /**
  * Iterator
  *
@@ -131,4 +130,4 @@ export {
     queryfy,
     dequeryfy,
     getType
-}
+};

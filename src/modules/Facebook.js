@@ -48,11 +48,11 @@ function facebookShare(url, callbackSuccess, callbackError) {
 };
 
 function facebookPluginIsDefined(){
-    return typeof window.facebookConnectPlugin !== "undefined";
+    return typeof window.facebookConnectPlugin !== 'undefined';
 }
 
 module.exports = {
-    facebookLogin:requireCondition(facebookPluginIsDefined, facebookLogin, null, ERROR_MESSAGE, "warn"),
-    facebookShare:requireCondition(facebookPluginIsDefined, facebookShare, null, ERROR_MESSAGE, "warn"),
-    LOG:LOG
+    facebookLogin: requireCondition(facebookPluginIsDefined, facebookLogin, null, ERROR_MESSAGE, 'warn'),
+    facebookShare: requireCondition(facebookPluginIsDefined, facebookShare, null, ERROR_MESSAGE, 'warn'),
+    LOG: LOG
 };

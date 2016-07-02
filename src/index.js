@@ -6,58 +6,75 @@ import {
 } from './modules/Utils';
 import { requireCondition } from './modules/Decorators';
 import Facebook from './modules/Facebook';
-import Connection from './modules/Connection';
 import { version } from '../package.json';
-import File from './modules/File';
+
+import fileModule from './modules/File';
 import Game from './modules/Game';
+import Connection from './modules/Connection';
+
 import cookies from 'cookies-js';
-import { CONFIGURATION } from './stargate.conf.js';
+import { DEFAULT_CONFIGURATION } from './stargate.conf.js';
+import bus from './modules/EventBus';
 
 var stargateModules = {
-    file: File,
-    game: Game
+    file: fileModule,
+    game: new Game()
 };
 var LOG = new Logger('all', '[Stargate]');
-var hybrid = false;
 var initialized = false;
 var isStargateOpen = false;
-var _CONFIGURATION;
+var CUSTOM_CONF;
+const DEVICE_READY_TIMEOUT = 5000;
 
-var alreadyInitializedPromise;
+var initPromise;
+var modulesLoaded;
+
 /**
- * Stargate.initialize waits the cordova deviceready
+ * Stargate.initialize waits the cordova deviceready if runs in hybrid env
  * @param {Object} [configuration={}] - the object configuration
  * @param {Function} [callback=function(){}] - callback called when deviceready arrives
- * @returns {Promise}
+ * @returns {Promise<Object|Timeout>}
  */
 function initialize(configuration = {}, callback = function(){}){
-    if (alreadyInitializedPromise){ 
-        LOG.w('Stargate Already initialized');
-        return alreadyInitializedPromise; 
+    if (initPromise){ 
+        LOG.w('Initialized already called');
+        return initPromise; 
     }
     
-    _CONFIGURATION = extend(CONFIGURATION, configuration);    
+    CUSTOM_CONF = extend(DEFAULT_CONFIGURATION, configuration);
     
-    alreadyInitializedPromise = new Promise((resolve, reject) => {       
-        
-        document.addEventListener('deviceready', (readyEvent) => {
-            LOG.i('ReadyEvent:', readyEvent);          
-            var modulesLoaded = [], 
-                results;
-            
-            modulesLoaded = _CONFIGURATION.modules.map(moduleInitializer);            
-            results = Promise.all(modulesLoaded);
-            resolve(results);
-            Connection.initialize();
+    // if isHybrid wait deviceready otherwise just call init 
+    if (isHybrid()) {
+        LOG.i('Hybrid init');
+        initPromise = new Promise((resolve, reject) => {
+            document.addEventListener('deviceready', resolve);
+
+            // Reject the promise after 5s
+            setTimeout(() => { 
+                isStargateOpen = false;
+                initialized = false;
+                reject(['deviceready timeout', DEVICE_READY_TIMEOUT].join(' ')); 
+            }, DEVICE_READY_TIMEOUT);
+        }).then((readyEvent) => {
+            LOG.i('ReadyEvent', readyEvent);
+            modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
+            Connection.initialize();   
+            callback('OK');
+            return Promise.all(modulesLoaded);            
         });
-    });
+        
+    } else {
+        LOG.i('No hybrid init');
+        modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
+        Connection.initialize();
+        initPromise = Promise.all(modulesLoaded);
+    }
     
-    return alreadyInitializedPromise.then((results) => {
-        isStargateOpen = true;
+    return initPromise.then((results) => {
         initialized = true;
-        callback(results);
+        isStargateOpen = true;
         return results;
-    });
+    });    
 }
 
 function moduleInitializer(moduleAndConf){
@@ -73,6 +90,17 @@ function moduleInitializer(moduleAndConf){
         LOG.w([name, 'unsupported'].join(' '));
         return Promise.reject([name, 'unsupported'].join(' '));
     }
+}
+
+/**
+ * 
+ * initModule waits the main initialization 
+ * @param {Array<String|Object>} moduleAndConf - modulename and configuration object 
+ */
+function initModule(moduleAndConf){
+    if (!initPromise) { return Promise.reject('Stargate.initialize needs to be called first'); }
+
+    return initPromise.then((results) => moduleInitializer(moduleAndConf));
 }
 
 /**
@@ -104,20 +132,21 @@ function isHybrid(){
     var uri = window.document.location.href;
     var queryStringObject = dequeryfy(uri);
     var protocol = window.document.location.protocol;
+    var cordovaDefined = typeof window.cordova !== 'undefined';
 
-    if (protocol === 'file:' || protocol === 'cdvfile:') {
+    if ((protocol === 'file:' || protocol === 'cdvfile:') && cordovaDefined) {
         return true;
     }
 
-    if (cookies.get('hybrid')) {
+    if (cookies.get('hybrid') && cordovaDefined) {
         return true;
     }
     
-    if (queryStringObject.hasOwnProperty('hybrid')) {
+    if (queryStringObject.hasOwnProperty('hybrid') && cordovaDefined) {
         return true;
     }
 
-    if (window.localStorage.getItem('hybrid')) {
+    if (window.localStorage.getItem('hybrid') && cordovaDefined) {
         return true;
     }
 
@@ -132,7 +161,7 @@ function isOpen (){
 }
 
 /**
- * register a listener for a series of events
+ * Register a listener for a series of events. Callable after initialize
  * @param {String} type - connectionchange for example
  * @param {Function} fn - the function to call when the event occurs
  */
@@ -141,12 +170,21 @@ function addListener(type, fn){
 }
 
 /**
- * register a listener for a series of events
+ * Remoe a listener for a series of events
  * @param {String} type - connectionchange for example
  * @param {Function} fn - the function to call when the event occurs
  */
 function removeListener(type, fn){
     Connection.removeListener(type, fn);
+}
+
+/**
+ * just for test
+ */
+function __deinit__(){
+    initPromise = null; 
+    initialized = false; 
+    isStargateOpen = false;
 }
 
 const MESSAGE_INITIALIZED = 'Call after Stargate.initialize() please';
@@ -158,8 +196,10 @@ export default {
     addListener: requireCondition(isInitialized, addListener, null, MESSAGE_INITIALIZED, 'warn'),
     removeListener: requireCondition(isInitialized, removeListener, null, MESSAGE_INITIALIZED, 'warn'),
     checkConnection: requireCondition(isInitialized, Connection.checkConnection, null, MESSAGE_INITIALIZED, 'warn'),
-    file: File,
+    file: fileModule,
     game: Game,
+    initModule: moduleInitializer,
     isInitialized: isInitialized,
-    isHybrid: isHybrid
+    isHybrid: isHybrid,
+    __deinit__: __deinit__
 }

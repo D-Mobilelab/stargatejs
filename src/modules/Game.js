@@ -1,12 +1,10 @@
 import Promise from 'promise-polyfill';
-import Logger from './Logger';
 import fileModule from './File';
+import Logger from './Logger';
 import { jsonpRequest } from './Http';
 import { extend, 
          queryfy 
 } from './Utils';
-
-var composeApiString = queryfy;
 
 var baseDir,
     cacheDir,
@@ -56,7 +54,7 @@ var baseDir,
         "check_compatibility_header":0
     };
 
-    var LOG = new Logger("ALL", "[Game - module]", { background: "black",color: "#5aa73a" });
+    var LOG = new Logger("ALL", "[Game - module]", { background: "black", color: "#5aa73a" });
 
     /**
      * @constructor
@@ -96,14 +94,12 @@ var baseDir,
      * @param {Array} customConf.bundle_games
      * @returns {Promise<Array<boolean>>}
      * */
-     function initialize(customConf){
-
+     Game.prototype.initialize = function(customConf){
+         
         if(customConf){
             CONF = extend(CONF, customConf);
         }
-        LOG.d("Initialized called with:", CONF);
-
-        if(!fileModule){ return Promise.reject("Missing file module!"); }
+        LOG.d("Initialized called with:", CONF);        
 
         try {
             baseDir = window.cordova.file.applicationStorageDirectory;
@@ -142,8 +138,8 @@ var baseDir,
         LOG.i("cordova JS dir to include", constants.CORDOVAJS);
 
         /** expose */
-        _modules.game._public.BASE_DIR = constants.BASE_DIR;
-        _modules.game._public.OFFLINE_INDEX = constants.WWW_DIR + "index.html";
+        this.BASE_DIR = constants.BASE_DIR;
+        this.OFFLINE_INDEX = constants.WWW_DIR + "index.html";
 
 
         /**
@@ -174,7 +170,7 @@ var baseDir,
                 LOG.d("GamesDir, ScriptsDir, offlineData.json created", results);
                 return copyAssets();
             }).then(getSDK);
-    }
+    };
 
     function copyAssets(){
         return Promise.all([
@@ -227,8 +223,8 @@ var baseDir,
 
     function getSDK(){
         var now = new Date();
-        var sdkURLFresh = querify(CONF.sdk_url, {"v":now.getTime()});
-        var dixieURLFresh = querify(CONF.dixie_url, {"v":now.getTime(), "country":"xx-gameasy"});
+        var sdkURLFresh = queryfy(CONF.sdk_url, {"v":now.getTime()});
+        var dixieURLFresh = queryfy(CONF.dixie_url, {"v":now.getTime(), "country":"xx-gameasy"});
 
         return Promise.all([
             fileModule.fileExists(constants.SDK_DIR + "dixie.js"),
@@ -919,7 +915,7 @@ var baseDir,
                 .then(function(bundleGamesIds){
 
                     obj.content_id = bundleGamesIds;
-                    var api_string = querify(CONF.api, obj);
+                    var api_string = queryfy(CONF.api, obj);
                     LOG.d("Request bundle games meta info:", api_string);
 
                     return new jsonpRequest(api_string).prom;
@@ -990,7 +986,7 @@ var baseDir,
          *  queues:{}
          * }
          * */
-        var apiGaForGames = querify(CONF.ga_for_game_url, ga_for_games_qs);
+        var apiGaForGames = queryfy(CONF.ga_for_game_url, ga_for_games_qs);
         var getGaForGamesTask = new jsonpRequest(apiGaForGames).prom;
         
         var tasks = Promise.all([getGaForGamesTask, readUserJson()]);
@@ -1008,7 +1004,7 @@ var baseDir,
             LOG.d("PONYVALUE", _PONYVALUE);
             LOG.d("apiGaForGames:", apiGaForGames, "ga_for_game:", ga_for_game);
             
-            var gamifive_api = querify(CONF.gamifive_info_api, {
+            var gamifive_api = queryfy(CONF.gamifive_info_api, {
                 content_id:content_id,                
                 format:"jsonp"
             });
@@ -1039,4 +1035,5 @@ var baseDir,
             });
     }
 
-module.exports = new Game();
+
+export default Game;
