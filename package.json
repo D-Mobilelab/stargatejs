@@ -9,8 +9,10 @@
   "scripts": {
     "build": "browserify -t [babelify] src/index.js -o dist/stargate.js -s Stargate",
     "docs": "esdoc -c esdoc.json",
-    "test:develop": "karma start --browsers PhantomJS,Chrome",
-    "test": "karma start --no-auto-watch --browsers PhantomJS --single-run"
+    "test": "karma start --no-auto-watch --browsers PhantomJS --single-run",
+    "test:browser": "karma start --browsers Chrome --single-run",
+    "test:develop": "karma start --browsers PhantomJS",
+    "test:browser:develop": "karma start --browsers Chrome"        
   },
   "devDependencies": {
     "babel-plugin-add-module-exports": "^0.2.1",
