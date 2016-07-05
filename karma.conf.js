@@ -78,10 +78,11 @@ var karmaConf = {
     concurrency: Infinity
 };
   
-    if (process.env.TRAVIS) {
-      console.log('Running Travis Chrome for tests');
-      configuration.browsers = ['Chrome_travis_ci'];
-    }
-  
-    config.set(karmaConf);
+if (process.env.TRAVIS) {
+    console.log("TRAVIS!", process.env.TRAVIS);
+    console.log('Running Travis Chrome for tests');
+    karmaConf.browsers = ['Chrome_travis_ci'];
+}  
+config.set(karmaConf);
+
 };
