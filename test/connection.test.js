@@ -18,7 +18,7 @@ describe('Connection tests', () => {
         var onchange = jasmine.createSpy('connchange');
         connection.addListener('connectionchange', onchange);
 
-        simulateEvent('offline', { type: 'offline' }, 1, 'document');
+        simulateEvent('offline', { _type: 'offline' }, 1, 'window');
 
         setTimeout(() => {
             expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'offline' });
@@ -30,36 +30,36 @@ describe('Connection tests', () => {
     it('Test Connection online if it\'s a browser', (done) => {
         connection.initialize();
 
-        var onchange = jasmine.createSpy("connchange");
-        connection.addListener("connectionchange", onchange);
+        var onchange = jasmine.createSpy('connchange');
+        connection.addListener('connectionchange', onchange);
 
-        simulateEvent('online', { type:"online" }, 1, 'document');
-
-        setTimeout(() => {
-            expect(onchange).toHaveBeenCalledWith({ type: "none", networkState: "online" });
-            connection.removeListener("connectionchange", onchange);
-            done();
-        }, 600);
-    });
-
-   it("Test Connection online if cordova-network-information is defined", (done) => {
-        netInfoMock.install();
-        connection.initialize();
-
-        var onchange = jasmine.createSpy("connchange");
-        connection.addListener("connectionchange", onchange);
-
-        simulateEvent('online', { type: 'online' }, 1, 'document');
+        simulateEvent('online', { _type: 'online' }, 1, 'window');
 
         setTimeout(() => {
-            expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'online' });
-            netInfoMock.uninstall();
+            expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'online' });
             connection.removeListener('connectionchange', onchange);
             done();
         }, 600);
     });
 
-    it("Test Connection offline if it's cordova-network-information defined", (done) => {
+    it('Test Connection online if cordova-network-information is defined', (done) => {
+        netInfoMock.install();
+        connection.initialize();
+
+        var onchange = jasmine.createSpy('connchange');
+        connection.addListener('connectionchange', onchange);
+
+        simulateEvent('online', { _type: 'online' }, 1, 'window');
+
+        setTimeout(() => {
+           expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'online' });
+           netInfoMock.uninstall();
+           connection.removeListener('connectionchange', onchange);
+           done();
+       }, 600);
+    });
+
+    it('Test Connection offline if it\'s cordova-network-information defined', (done) => {
         netInfoMock.install();
         connection.initialize();
 
@@ -70,7 +70,7 @@ describe('Connection tests', () => {
         window.navigator.connection.type = 'wifi';
 
         // Simulate Event
-        simulateEvent('offline', { type: 'offline' }, 1, 'document');
+        simulateEvent('offline', { _type: 'offline' }, 1, 'window');
 
         setTimeout(() => {
             expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'offline' });

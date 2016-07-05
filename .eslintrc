@@ -23,7 +23,7 @@
 		// warning if you don't use "const" for a variable never modified
 		"prefer-const": 1,
 		// warning if you declare a variable not at the top of a function scope
-		"vars-on-top": 1,
+		"vars-on-top": 0,
 		// you can re-assign a function parameter ( function(b){ b++; } )
 		"no-param-reassign": 1,
 		// you can use "else" after a return
@@ -46,6 +46,7 @@
 		"no-trailing-spaces": 0,
 		// blocks could be padded by blank lines
 		"padded-blocks": [0, "never"],
-		"no-use-before-define": 0
+		"no-use-before-define": 0,
+		"no-underscore-dangle": 0
 	}
 }

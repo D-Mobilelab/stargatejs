@@ -16,8 +16,45 @@ var ctx = {
     }
 };
 
-describe('Stargate public interface tests', () => {
+describe('Stargate public interface tests 1', () => {
 
+    beforeAll(() => {
+        //jasmine.clock().install();
+    });
+
+    afterAll(() => {
+        //jasmine.clock().uninstall();
+    });
+
+    beforeEach(() => {
+        cordovaMock.install(2); // deviceready event after 2000ms
+    });
+
+    afterEach(() => {             
+        cordovaMock.uninstall();
+        Stargate.__deinit__();
+    });
+
+    it('Initialize hybrid but deviceready after 2 seconds', (done) => {              
+        var resolvedInit = jasmine.createSpy('resolvedInit');
+        var SG_CONF = { DEVICE_READY_TIMEOUT: 500 };
+        expect(Stargate.isHybrid(ctx)).toEqual(true);        
+
+        Stargate.initialize(SG_CONF)
+        .then((results) => {
+            resolvedInit(results);
+            expect(resolvedInit).not.toHaveBeenCalled();
+            done();
+        }).catch((reason) => {
+            expect(reason).toEqual('deviceready timeout ' + SG_CONF.DEVICE_READY_TIMEOUT);
+            expect(Stargate.isInitialized()).toEqual(false);
+            expect(resolvedInit).not.toHaveBeenCalled();
+            done();
+        });    
+    });
+});
+
+describe('Stargate public interface tests 2', () => {
 
     beforeEach(() => {
        cordovaMock.install(3);
@@ -28,12 +65,8 @@ describe('Stargate public interface tests', () => {
     afterEach(() => {
         deviceMock.uninstall();
         fileMock.uninstall();
-        cordovaMock.uninstall();
-                
-        localStorage.removeItem('hybrid');
-        localStorage.removeItem('stargateVersion');
-        cookies.expire('hybrid');
-        cookies.expire('stargateVersion');
+        cordovaMock.uninstall();                
+
         Stargate.__deinit__();
     });
 
@@ -63,42 +96,4 @@ describe('Stargate public interface tests', () => {
             done(); 
         });        
     });
-});
-
-describe('Stargate public interface tests 2', () => {
-    // another describe beacause of timeout
-    var originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 5100;
-
-    beforeEach(() => {
-       cordovaMock.install(6);
-    });
-
-    afterEach(() => {
-                
-        localStorage.removeItem('hybrid');
-        localStorage.removeItem('stargateVersion');
-        cookies.expire('hybrid');
-        cookies.expire('stargateVersion');
-        Stargate.__deinit__();
-    });
-
-    it('Initialize hybrid but deviceready after 5 seconds', (done) => {              
-
-        expect(Stargate.isHybrid(ctx)).toEqual(true);
-        var resolvedInit = jasmine.createSpy('resolvedInit');
-
-        Stargate.initialize().then(resolvedInit).catch((reason) => {
-            expect(reason).toEqual('deviceready timeout 5000');
-            expect(Stargate.isInitialized()).toEqual(false); 
-            
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-            cordovaMock.uninstall();
-            
-            expect(resolvedInit).not.toHaveBeenCalled();
-            done();
-        });
-    
-    });
-
 });

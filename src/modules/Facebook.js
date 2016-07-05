@@ -1,51 +1,50 @@
-"use strict";
-var Logger = require("./Logger");
-var requireCondition = require("./Decorators").requireCondition;
-var LOG = new Logger("ALL", "[Facebook]");
-var ERROR_MESSAGE  = "Cordova plugin for facebook is undefined";
+var Logger = require('./Logger');
+var requireCondition = require('./Decorators').requireCondition;
+var LOG = new Logger('ALL', '[Facebook]');
+const ERROR_MESSAGE = 'Cordova plugin for facebook is undefined';
 
 function facebookLogin(scope, callbackSuccess, callbackError) {
 
     window.facebookConnectPlugin.login(
-        scope.split(","),
+        scope.split(','),
         // success callback
         function (userData) {
-            LOG.d("got userdata: ", userData);
+            LOG.d('got userdata: ', userData);
             
             facebookConnectPlugin.getAccessToken(
                 function(token) {
-                    callbackSuccess({'accessToken' : token});
+                    callbackSuccess({ accessToken: token });
                 },
                 function(err) {
-                    callbackError({'error': err});
+                    callbackError({ error: err });
                 }
             );
         },
 
         // error callback
         function (error) {
-            LOG.e("Got FB login error:", error);
-            callbackError({'error': error});
+            LOG.e('Got FB login error:', error);
+            callbackError({ error });
         }
     );
-};
+}
 
 function facebookShare(url, callbackSuccess, callbackError) {
     var options = {
-        method: "share",
+        method: 'share',
         href: url
     };
     
     window.facebookConnectPlugin.showDialog(
         options,        
         function(message){
-            callbackSuccess({'message':message});
+            callbackSuccess({ message });
         },
         function(error){           
-            callbackError({'error':error});
+            callbackError({ error });
         }
     );
-};
+}
 
 function facebookPluginIsDefined(){
     return typeof window.facebookConnectPlugin !== 'undefined';
@@ -54,5 +53,5 @@ function facebookPluginIsDefined(){
 module.exports = {
     facebookLogin: requireCondition(facebookPluginIsDefined, facebookLogin, null, ERROR_MESSAGE, 'warn'),
     facebookShare: requireCondition(facebookPluginIsDefined, facebookShare, null, ERROR_MESSAGE, 'warn'),
-    LOG: LOG
+    LOG
 };

@@ -13,7 +13,7 @@ function CordovaMock(){}
         version: '4.1.1'
     };
     window.plugins = {};
-    simulateEvent('deviceready', { pippo: 1, pappo: 2 }, devicereadyAfter * 1000);
+    simulateEvent('deviceready', { pippo: 1, pappo: 2 }, devicereadyAfter * 1000, 'document');
 };
 
 CordovaMock.prototype.uninstall = function(){

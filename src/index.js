@@ -1,4 +1,5 @@
-import Promise from 'promise-polyfill';
+import 'babel-polyfill';
+// import Promise from 'promise-polyfill';
 import Logger from './modules/Logger';
 import {
     extend,
@@ -6,7 +7,7 @@ import {
 } from './modules/Utils';
 import { requireCondition } from './modules/Decorators';
 import Facebook from './modules/Facebook';
-import { version } from '../package.json';
+import { version, build } from './info.json';
 
 import fileModule from './modules/File';
 import Game from './modules/Game';
@@ -14,7 +15,7 @@ import Connection from './modules/Connection';
 
 import cookies from 'cookies-js';
 import { DEFAULT_CONFIGURATION } from './stargate.conf.js';
-import bus from './modules/EventBus';
+ // import bus from './modules/EventBus';
 
 var stargateModules = {
     file: fileModule,
@@ -23,15 +24,15 @@ var stargateModules = {
 var LOG = new Logger('all', '[Stargate]');
 var initialized = false;
 var isStargateOpen = false;
-var CUSTOM_CONF;
-const DEVICE_READY_TIMEOUT = 5000;
+var CUSTOM_CONF = {};
 
 var initPromise;
 var modulesLoaded;
 
 /**
  * Stargate.initialize waits the cordova deviceready if runs in hybrid env
- * @param {Object} [configuration={}] - the object configuration
+ * @param {Object} [configuration={DEVICE_READY_TIMEOUT: 5000, modules: [['file', {}]]}] - the object configuration
+ * @param {Number} configuration.DEVICE_READY_TIMEOUT how much to wait the deviceready event in ms
  * @param {Function} [callback=function(){}] - callback called when deviceready arrives
  * @returns {Promise<Object|Timeout>}
  */
@@ -47,14 +48,17 @@ function initialize(configuration = {}, callback = function(){}){
     if (isHybrid()) {
         LOG.i('Hybrid init');
         initPromise = new Promise((resolve, reject) => {
-            document.addEventListener('deviceready', resolve);
+            document.addEventListener('deviceready', function onready(e){
+                resolve(e);
+                document.removeEventListener('deviceready', onready);
+            });
 
             // Reject the promise after 5s
             setTimeout(() => { 
                 isStargateOpen = false;
                 initialized = false;
-                reject(['deviceready timeout', DEVICE_READY_TIMEOUT].join(' ')); 
-            }, DEVICE_READY_TIMEOUT);
+                reject(['deviceready timeout', CUSTOM_CONF.DEVICE_READY_TIMEOUT].join(' ')); 
+            }, CUSTOM_CONF.DEVICE_READY_TIMEOUT);
         }).then((readyEvent) => {
             LOG.i('ReadyEvent', readyEvent);           
             
@@ -101,7 +105,7 @@ function moduleInitializer(moduleAndConf){
 function initModule(moduleAndConf){
     if (!initPromise) { return Promise.reject('Stargate.initialize needs to be called first'); }
 
-    return initPromise.then((results) => moduleInitializer(moduleAndConf));
+    return initPromise.then(() => moduleInitializer(moduleAndConf));
 }
 
 /**
@@ -110,7 +114,7 @@ function initModule(moduleAndConf){
  * @returns {String}
  */
 function getVersion() {
-    return version;
+    return [version, build];
 }
 
 /**
@@ -154,7 +158,7 @@ function isHybrid(ctx){
     if ((protocol === 'file:' || protocol === 'cdvfile:')) {
         return true;
     }
-    
+
     if (window.localStorage.getItem('hybrid')) {
         return true;
     }
@@ -197,21 +201,38 @@ function __deinit__(){
     initPromise = null; 
     initialized = false; 
     isStargateOpen = false;
+    localStorage.removeItem('hybrid');
+    localStorage.removeItem('stargateVersion');
+    cookies.expire('hybrid');
+    cookies.expire('stargateVersion');
 }
 
 const MESSAGE_INITIALIZED = 'Call after Stargate.initialize() please';
 export default {
-    initialize: initialize,
-    getVersion: getVersion,    
+    initialize,
+    getVersion,    
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
-    addListener: requireCondition(isInitialized, addListener, null, MESSAGE_INITIALIZED, 'warn'),
-    removeListener: requireCondition(isInitialized, removeListener, null, MESSAGE_INITIALIZED, 'warn'),
-    checkConnection: requireCondition(isInitialized, Connection.checkConnection, null, MESSAGE_INITIALIZED, 'warn'),
-    file: fileModule,
-    game: Game,
-    initModule: moduleInitializer,
-    isInitialized: isInitialized,
-    isHybrid: isHybrid,
-    __deinit__: __deinit__
+    addListener: requireCondition(isInitialized, 
+                                    addListener, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    'warn'),
+    removeListener: requireCondition(isInitialized, 
+                                    removeListener, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    'warn'),
+    checkConnection: requireCondition(isInitialized, 
+                                    Connection.checkConnection, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    'warn'),
+    file: stargateModules.file,
+    game: stargateModules.game,
+    initModule,
+    isInitialized,
+    isHybrid,
+    isOpen,
+    __deinit__
 }

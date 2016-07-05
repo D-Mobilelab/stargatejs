@@ -1,4 +1,5 @@
 export const DEFAULT_CONFIGURATION = {
+    DEVICE_READY_TIMEOUT: 5000,
     modules: [        
         ['file', {}]/* ,
         ['game', {
@@ -11,4 +12,4 @@ export const DEFAULT_CONFIGURATION = {
             }
         ]*/        
     ]
-};
+}

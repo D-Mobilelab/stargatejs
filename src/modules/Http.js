@@ -3,7 +3,7 @@ import Logger from './Logger';
 import { getType, extend } from './Utils';
 import connection from './Connection';
 
-var LOG = new Logger("ALL", "[Request]");
+var LOG = new Logger('ALL', '[Request]');
 /**
  * getJSON
  *
@@ -17,7 +17,7 @@ function getJSON(url){
 
     var responseTypeAware = 'responseType' in xhr;
 
-    xhr.open("GET", url, true);
+    xhr.open('GET', url, true);
     if (responseTypeAware) {
         xhr.responseType = 'json';
     }
@@ -60,31 +60,31 @@ function jsonpRequest(url){
     self.called = false;
     if (window.document) {
         var ts = Date.now();
-        self.scriptTag = window.document.createElement("script");
-        url += "&callback=window.__jsonpHandler_" + ts;
+        self.scriptTag = window.document.createElement('script');
+        url += '&callback=window.__jsonpHandler_' + ts;
         self.scriptTag.src = url;
         self.scriptTag.type = 'text/javascript';
         self.scriptTag.async = true;
 
         self.prom = new Promise(function(resolve, reject){
-            var functionName = "__jsonpHandler_" + ts;
+            var functionName = '__jsonpHandler_' + ts;
             window[functionName] = function(data){
                 self.called = true;
                 resolve(data);
                 self.scriptTag.parentElement.removeChild(self.scriptTag);
                 delete window[functionName];
             };
-            //reject after a timeout
+            // reject after a timeout
             setTimeout(function(){
-                if(!self.called){
-                    reject("Timeout jsonp request " + ts);
+                if (!self.called){
+                    reject('Timeout jsonp request ' + ts);
                     self.scriptTag.parentElement.removeChild(self.scriptTag);
                     delete window[functionName];
                 }
             }, self.timeout);
         });
         // the append start the call
-        window.document.getElementsByTagName("head")[0].appendChild(self.scriptTag);        
+        window.document.getElementsByTagName('head')[0].appendChild(self.scriptTag);        
     }
 }
 
@@ -103,22 +103,22 @@ function getImageRaw(options, _onProgress){
     var onProgress = _onProgress || function(){};
     return new Promise(function(resolve, reject){
         var request = new XMLHttpRequest();
-        request.open ("GET", options.url, true);
-        request.responseType = options.responseType || "blob";
+        request.open('GET', options.url, true);
+        request.responseType = options.responseType || 'blob';
         request.withCredentials = true;
         function transferComplete(){
             var result;
-            switch(options.responseType){
-                case "blob":
-                    result = new Blob([this.response], {type: options.mimeType || "image/jpeg"});
-                    break;
-                case "arraybuffer":
-                    result = this.response;
-                    break;
-                default:
-                    result = this.response;
-                    resolve(result);
-                    break;
+            switch (options.responseType){
+            case 'blob':
+                result = new Blob([this.response], { type: options.mimeType || 'image/jpeg' });
+                break;
+            case 'arraybuffer':
+                result = this.response;
+                break;
+            default:
+                result = this.response;
+                resolve(result);
+                break;
 
             }
         }
@@ -142,14 +142,14 @@ var defaultOptions = {
     attempt: 1,
     responseType: 'json', // json, document, "", text, blob, arraybuffer
     dataType: 'json', // the type of data sent(if any)
-    callback: function(){},
+    callback(){},
     headers: {},
     data: null,
     withCredentials: false,
     async: true,
     mimeType: '', // image/png"|"image/jpeg|text/plain mimeType only used when responseType is blob!
     retryAfter: 0, // ms, used if attempt > 1
-    onProgress: function(){}
+    onProgress(){}
 };
 
 /**
@@ -175,72 +175,72 @@ function Http(options, callback){
 }
 
 Http.prototype.do = function(resolve, reject){
-	var self = this;
-	if (this.options.attempt === 0){      
-        var lastCall = this.calls[this.calls.length - 1];
-        reject({ status: lastCall.status, statusText: lastCall.statusText });
-        self.callback(lastCall.status);
-        clearTimeout(self.timeoutID);
-        self.timeoutID = null;
-        return;
-    }
+	    var self = this;
+	    if (this.options.attempt === 0){      
+    var lastCall = this.calls[this.calls.length - 1];
+    reject({ status: lastCall.status, statusText: lastCall.statusText });
+    self.callback(lastCall.status);
+    clearTimeout(self.timeoutID);
+    self.timeoutID = null;
+    return;
+}
   
-  var xhr;
-  if (Http.isXMLHttpRequestSupported()) {
+    var xhr;
+    if (Http.isXMLHttpRequestSupported()) {
     // code for IE7+, Firefox, Chrome, Opera, Safari
-    xhr = new XMLHttpRequest();
+      xhr = new XMLHttpRequest();
   } else {
     // code for IE6, IE5
-    xhr = new ActiveXObject("Microsoft.XMLHTTP");
+      xhr = new ActiveXObject('Microsoft.XMLHTTP');
   }
   
-  //store this request in the object
-  this.calls.push(xhr);
+  // store this request in the object
+    this.calls.push(xhr);
   
-  //OPEN
-  xhr.open(this.options.method.toUpperCase(),
+  // OPEN
+    xhr.open(this.options.method.toUpperCase(),
            this.options.url, 
            this.options.async);
   
-  //SENDING JSON?
-  if(self.options.dataType === "json"){
-    self.options.data = JSON.stringify(self.options.data);
-    xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');        
+  // SENDING JSON?
+    if (self.options.dataType === 'json'){
+      self.options.data = JSON.stringify(self.options.data);
+      xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');        
   }  
   
-  //CUSTOM HEADERS
-  if(this.options.headers){
-    addCustomHeaders(this.options.headers, xhr);    
+  // CUSTOM HEADERS
+    if (this.options.headers){
+      addCustomHeaders(this.options.headers, xhr);    
   }
   
-  //CORS
-  if(this.options.withCredentials && Http.isCORSSupported()){
-    xhr.withCredentials = true;    
+  // CORS
+    if (this.options.withCredentials && Http.isCORSSupported()){
+      xhr.withCredentials = true;    
   }  
   
-  //check responseType support
-  var responseTypeAware = 'responseType' in xhr;
+  // check responseType support
+    var responseTypeAware = 'responseType' in xhr;
   
-  if(responseTypeAware){    
-    xhr.responseType = this.options.responseType;    
+    if (responseTypeAware){    
+      xhr.responseType = this.options.responseType;    
   }
   
-  LOG.d("responseType setted to ", xhr.responseType);
+    LOG.d('responseType setted to ', xhr.responseType);
   
-  xhr.onreadystatechange = function(event){
-  		if (xhr.readyState === xhr.DONE) {
-            if (xhr.status >= 200 && xhr.status < 400) {                    
-                if (xhr.responseType === "blob"){
-                    LOG.d("BLOB CASE!");
+    xhr.onreadystatechange = function(event){
+  		    if (xhr.readyState === xhr.DONE) {
+      if (xhr.status >= 200 && xhr.status < 400) {                    
+                if (xhr.responseType === 'blob'){
+                    LOG.d('BLOB CASE!');
                     
                     // try to infer mimetype from extension?
-                    var blob = new Blob([xhr.response], {type: self.options.mimeType})
+                    var blob = new Blob([xhr.response], { type: self.options.mimeType });
                     var fileReader = new FileReader();
                     
                     fileReader.onload = function(event){ 
                         var raw = event.target.result;    
                         resolve([raw, xhr.status, xhr]);
-                    }
+                    };
                     
                     fileReader.readAsDataURL(blob);
                     
@@ -255,52 +255,52 @@ Http.prototype.do = function(resolve, reject){
                 // statusCode >= 400 retry                
                 self.timeoutID = setTimeout(function(){
                     self.options.attempt -= 1;
-                    console.log("FAIL. " + xhr.status + " still more ", self.options.attempt, " attempts");                        
+                    console.log('FAIL. ' + xhr.status + ' still more ', self.options.attempt, ' attempts');                        
                     self.do(resolve, reject);
                 }, self.options.retryAfter);                
             }
   		}
-  }
+  };
 
- xhr.onprogress = wrapProgress(self.options.onProgress);
- xhr.send(self.options.data);  
-}
+    xhr.onprogress = wrapProgress(self.options.onProgress);
+    xhr.send(self.options.data);  
+};
 
 function parseResponse(xhr){
     var parsed;
     var self = this;
-    if(window.karma || window.parent.karma){
+    if (window.karma || window.parent.karma){
         // #]*§ WTF!!
-        LOG.i("TESTING MODE");
+        LOG.i('TESTING MODE');
         xhr.responseType = self.options.responseType;
     }                        
-    LOG.d("responseType in readyState ", xhr.responseType);                                                                                
-    if(xhr.responseType === "json" || xhr.responseType === "arraybuffer"){
-        LOG.d("JSON CASE!", xhr.response);                        
+    LOG.d('responseType in readyState ', xhr.responseType);                                                                                
+    if (xhr.responseType === 'json' || xhr.responseType === 'arraybuffer'){
+        LOG.d('JSON CASE!', xhr.response);                        
         parsed = xhr.response;
-    } else if(xhr.responseType === "document"){
-        LOG.d("DOCUMENT CASE!", xhr.responseXML);
+    } else if (xhr.responseType === 'document'){
+        LOG.d('DOCUMENT CASE!', xhr.responseXML);
         parsed = xhr.responseXML;
-    } else if(xhr.responseType === "text" || xhr.responseType === ""){
-        LOG.d("TEXT CASE!");                
+    } else if (xhr.responseType === 'text' || xhr.responseType === ''){
+        LOG.d('TEXT CASE!');                
         parsed = xhr.responseText;
     } else {
-        LOG.d("DEFAULT CASE!", xhr.responseText);
+        LOG.d('DEFAULT CASE!', xhr.responseText);
         parsed = xhr.responseText;
     }
     
     return [parsed, xhr.status, xhr];
 }
 
- function wrapProgress(fn){
-    return function(progressEvent){
+function wrapProgress(fn){
+     return function(progressEvent){
         if (progressEvent.lengthComputable) {
             var percentComplete = Math.round((progressEvent.loaded / progressEvent.total) * 100);
             return fn(percentComplete);            
         } else {
-            return fn("loading");
+            return fn('loading');
         }
-    } 
+    }; 
  }
 
 function addCustomHeaders(headersObj, xhr){
@@ -324,9 +324,9 @@ Http.isXDomainSupported = function() {
     return !!window.XDomainRequest;
 };
 
-module.exports = {
-    Http:Http,
-    getImageRaw:getImageRaw,
-    getJSON:getJSON,
-    jsonpRequest:jsonpRequest
-}
+export {
+    Http,
+    getImageRaw,
+    getJSON,
+    jsonpRequest
+};
