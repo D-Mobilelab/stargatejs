@@ -2,7 +2,7 @@ import connection from '../src/modules/Connection';
 import simulateEvent from './helpers/SimulateEvent';
 import netInfoMock from './helpers/cordova-plugin-network-information';
 
-describe('Utils tests', () => {
+describe('Connection tests', () => {
 
     beforeEach(() => {
         // netInfoMock.install();
@@ -12,7 +12,7 @@ describe('Utils tests', () => {
         // netInfoMock.uninstall();
     });
 
-    it("Test ConnectionChange offline if it's a browser", (done) =>{
+    it("Test ConnectionChange offline if it's a browser", (done) => {
         connection.initialize();
 
         var onchange = jasmine.createSpy('connchange');
@@ -35,7 +35,7 @@ describe('Utils tests', () => {
 
         simulateEvent('online', { type:"online" }, 1, 'document');
 
-        setTimeout(function(){
+        setTimeout(() => {
             expect(onchange).toHaveBeenCalledWith({ type: "none", networkState: "online" });
             connection.removeListener("connectionchange", onchange);
             done();
