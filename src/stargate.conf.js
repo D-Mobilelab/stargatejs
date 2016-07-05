@@ -1,7 +1,8 @@
 export const DEFAULT_CONFIGURATION = {
     DEVICE_READY_TIMEOUT: 5000,
     modules: [        
-        ['file', {}]/* ,
+        ['file', {}]
+        /* ,
         ['game', {
             sdk_url: '', 
             dixie_url: '', 
