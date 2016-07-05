@@ -56,7 +56,8 @@ function initialize(configuration = {}, callback = function(){}){
                 reject(['deviceready timeout', DEVICE_READY_TIMEOUT].join(' ')); 
             }, DEVICE_READY_TIMEOUT);
         }).then((readyEvent) => {
-            LOG.i('ReadyEvent', readyEvent);
+            LOG.i('ReadyEvent', readyEvent);           
+            
             modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
             Connection.initialize();   
             callback('OK');
@@ -124,32 +125,43 @@ function isInitialized(){
 /**
  * Check if stargate is running in hybrid environment: 
  * in order:check the protocol, check cookie if any, localStorage if any
+ * @param {Object} ctx - only for testing purporse
  * @static
  * @returns {Boolean}
  */
-function isHybrid(){
-    // check url for hybrid query param
-    var uri = window.document.location.href;
+function isHybrid(ctx){
+    
+    // Check url for hybrid query param
+    
+    var location = window.document.location;
+    if (ctx) { 
+        location = ctx.document.location;
+    }
+    var uri = location.href;
     var queryStringObject = dequeryfy(uri);
-    var protocol = window.document.location.protocol;
-    var cordovaDefined = typeof window.cordova !== 'undefined';
+    var protocol = location.protocol;
 
-    if ((protocol === 'file:' || protocol === 'cdvfile:') && cordovaDefined) {
-        return true;
+    if (queryStringObject.hasOwnProperty('stargateVersion')) {
+        window.localStorage.setItem('stargateVersion', queryStringObject.stargateVersion);
+        cookies.set('stargateVersion', queryStringObject.stargateVersion, { expires: Infinity });
     }
 
-    if (cookies.get('hybrid') && cordovaDefined) {
+    if (queryStringObject.hasOwnProperty('hybrid')) {
+        window.localStorage.setItem('hybrid', 1);
+        cookies.set('hybrid', '1', { expires: Infinity });
+    }
+
+    if ((protocol === 'file:' || protocol === 'cdvfile:')) {
         return true;
     }
     
-    if (queryStringObject.hasOwnProperty('hybrid') && cordovaDefined) {
+    if (window.localStorage.getItem('hybrid')) {
         return true;
     }
 
-    if (window.localStorage.getItem('hybrid') && cordovaDefined) {
+    if (cookies.get('hybrid')) {
         return true;
     }
-
     return false;
 }
 

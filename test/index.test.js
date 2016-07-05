@@ -6,13 +6,23 @@ import fileMock from './helpers/cordova-plugin-file';
 import { UnzipMock } from './helpers/cordova-plugin-unzip';
 import deviceMock from './helpers/cordova-plugin-device';
 
-describe('Stargate public interface tests', () => {   
+// Used to replace-mock window in some cases   
+var ctx = {
+    document: {
+        location: {
+            href: 'http://mockit.com/?hybrid=1&stargateVersion=4',
+            protocol: 'http:'
+        }
+    }
+};
+
+describe('Stargate public interface tests', () => {
 
 
     beforeEach(() => {
        cordovaMock.install(3);
        fileMock.install();
-       deviceMock.install();       
+       deviceMock.install();
     });
 
     afterEach(() => {
@@ -21,7 +31,9 @@ describe('Stargate public interface tests', () => {
         cordovaMock.uninstall();
                 
         localStorage.removeItem('hybrid');
+        localStorage.removeItem('stargateVersion');
         cookies.expire('hybrid');
+        cookies.expire('stargateVersion');
         Stargate.__deinit__();
     });
 
@@ -30,20 +42,16 @@ describe('Stargate public interface tests', () => {
         expect(Stargate.initialize).toBeDefined();        
     });
 
-    fit('Test isHybrid false', () => {
+    it('Test isHybrid false', () => {
         expect(Stargate.isHybrid()).toEqual(false);
     });
 
-    fit('Test isHybrid true with cookie', () => {
+    it('Test isHybrid true', () => {
         
-        cookies.set('hybrid', 1);
-        expect(Stargate.isHybrid()).toEqual(true);
-    });
+        expect(Stargate.isHybrid(ctx)).toEqual(true);
+        expect(cookies.get('hybrid')).toEqual('1');
+        expect(localStorage.getItem('hybrid')).toEqual('1');
 
-    fit('Test isHybrid true with localStorage', () => {
-        localStorage.setItem('hybrid', 1);
-
-        expect(Stargate.isHybrid()).toEqual(true);
     });
 
     it('Initialize hybrid should wait deviceready', (done) => {
@@ -55,49 +63,39 @@ describe('Stargate public interface tests', () => {
             done(); 
         });        
     });
-
-    it('initModule Game after initialize', (done) => {
-        var instanceUnzipMock = new UnzipMock();
-        instanceUnzipMock.install();
-        var GAME_CONF = {
-            sdk_url: '', 
-            dixie_url: '', 
-            api: '', 
-            ga_for_game_url: '', 
-            gamifive_info_api: '', 
-            bundle_games: []
-        };
-
-        Stargate.initialize();
-        Stargate.initModule(['game', GAME_CONF]).then(() => {            
-           done(); 
-           instanceUnzipMock.uninstall();
-        });
-
-    });
 });
 
 describe('Stargate public interface tests 2', () => {
-
+    // another describe beacause of timeout
     var originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 5100;
 
-    it('Initialize hybrid should FAIL after 5s without deviceready', (done) => {    
-        localStorage.setItem('hybrid', 1);        
-        cordovaMock.install(6);        
+    beforeEach(() => {
+       cordovaMock.install(6);
+    });
 
-        expect(Stargate.isHybrid()).toEqual(true);
+    afterEach(() => {
+                
+        localStorage.removeItem('hybrid');
+        localStorage.removeItem('stargateVersion');
+        cookies.expire('hybrid');
+        cookies.expire('stargateVersion');
+        Stargate.__deinit__();
+    });
 
-        Stargate.initialize().then((results) => { 
-            cordovaMock.uninstall();
-            done();
-        }).catch((reason) => {
+    it('Initialize hybrid but deviceready after 5 seconds', (done) => {              
+
+        expect(Stargate.isHybrid(ctx)).toEqual(true);
+        var resolvedInit = jasmine.createSpy('resolvedInit');
+
+        Stargate.initialize().then(resolvedInit).catch((reason) => {
             expect(reason).toEqual('deviceready timeout 5000');
             expect(Stargate.isInitialized()).toEqual(false); 
             
             jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
             cordovaMock.uninstall();
-
+            
+            expect(resolvedInit).not.toHaveBeenCalled();
             done();
         });
     
