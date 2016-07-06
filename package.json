@@ -18,10 +18,8 @@
     "postbuild": "npm run gendocs",
     "prepublish": "npm run build",
     "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
-    "test": "karma start --no-auto-watch --browsers Chrome --single-run",
-    "test:browser": "karma start --browsers Chrome --single-run",
-    "test:develop": "karma start --browsers PhantomJS",
-    "test:browser:develop": "karma start --browsers Chrome",
+    "test": "karma start --no-auto-watch --single-run",   
+    "test:develop": "karma start --browsers PhantomJS",    
     "preversion": "npm run test",
     "version": "npm run build && git add -A dist docs",
     "postversion": "git push && git push --tags"

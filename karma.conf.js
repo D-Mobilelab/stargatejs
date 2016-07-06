@@ -4,32 +4,37 @@ var istanbul = require('browserify-istanbul');
 module.exports = function(config) {
 var karmaConf = {
 
-// base path that will be used to resolve all patterns (eg. files, exclude)
+    // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
-
-  // frameworks to use
-  // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
+    customLaunchers: {
+        Chrome_travis_ci: {
+            base: 'Chrome',
+            flags: ['--no-sandbox']
+        }
+    },
+    // frameworks to use
+    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['browserify', 'jasmine'],
 
-  // list of files / patterns to load in the browser
+     // list of files / patterns to load in the browser
     files: [
       'test/*.test.js',
     ],
 
-  // list of files to exclude
+    // list of files to exclude
     exclude: [],
     preprocessors: {
-  // source files, that you wanna generate coverage for
-  // do not include tests or libraries
-  // (these files will be instrumented by Istanbul)
+    // source files, that you wanna generate coverage for
+    // do not include tests or libraries
+    // (these files will be instrumented by Istanbul)
       'src/**/*.js': ['browserify', 'coverage'],
       'test/**/*.js': ['browserify']
     },
-  // test results reporter to use
-  // possible values: 'dots', 'progress'
-  // available reporters: https://npmjs.org/browse/keyword/karma-reporter
+    // test results reporter to use
+    // possible values: 'dots', 'progress'
+    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['coverage', 'coveralls', 'mocha'],
-  // optionally, configure the reporter
+    // optionally, configure the reporter
     coverageReporter: {
         reporters: [{ type: 'text' }, {
             type: 'html',
@@ -42,20 +47,20 @@ var karmaConf = {
         }]
     },
 
-// web server port
+    // web server port
     port: 9000,
 
 
-// enable / disable colors in the output (reporters and logs)
+    // enable / disable colors in the output (reporters and logs)
     colors: true,
 
 
-// level of logging
-// possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
+    // level of logging
+    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
     logLevel: config.LOG_DISABLE,
 
 
-// enable / disable watching file and executing tests whenever any file changes
+    // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
     browserify: {
       debug: true,
@@ -64,22 +69,22 @@ var karmaConf = {
             ignore: ['**/node_modules/**', '**/test/**']
           })]
     },
-// start these browsers
-// available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
+    // start these browsers
+    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
+    browsers: ['Chrome'],
 
 
-// Continuous Integration mode
-// if true, Karma captures browsers, runs the tests and exits
+    // Continuous Integration mode
+    // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
 
-// Concurrency level
-// how many browser should be started simultaneous
+    // Concurrency level
+    // how many browser should be started simultaneous
     concurrency: Infinity
 };
   
 if (process.env.TRAVIS) {
-    console.log("TRAVIS!", process.env.TRAVIS);
+    console.log('TRAVIS!', process.env.TRAVIS);
     console.log('Running Travis Chrome for tests');
     karmaConf.browsers = ['Chrome_travis_ci'];
 }  
