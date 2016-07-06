@@ -1,9 +1,8 @@
-import fileModule from './File';
-import Logger from './Logger';
-import { jsonpRequest } from './Http';
-import { extend, 
-         queryfy 
-} from './Utils';
+var fileModule = require('./File');
+var Logger = require('./Logger');
+var jsonpRequest = require('./Http').jsonpRequest;
+var extend = require('./Utils').extend;
+var dequeryfy = require('./Utils').dequeryfy;
 
 var baseDir,
     cacheDir,
@@ -1033,6 +1032,4 @@ function updateOfflineData(object){
                 return fileModule.write(constants.BASE_DIR + 'offlineData.json', JSON.stringify(offlineDataUpdated));
             });
     }
-
-
-export default Game;
+module.exports = Game;

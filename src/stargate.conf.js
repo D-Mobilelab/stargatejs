@@ -1,4 +1,4 @@
-export const DEFAULT_CONFIGURATION = {
+const DEFAULT_CONFIGURATION = {
     DEVICE_READY_TIMEOUT: 5000,
     modules: [        
         ['file', {}]
@@ -13,4 +13,5 @@ export const DEFAULT_CONFIGURATION = {
             }
         ]*/        
     ]
-}
+};
+module.exports = DEFAULT_CONFIGURATION;

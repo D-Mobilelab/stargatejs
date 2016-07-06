@@ -1,7 +1,7 @@
-import Promise from 'promise-polyfill';
-import Logger from './Logger';
-import { getType, extend } from './Utils';
-import connection from './Connection';
+var Logger = require('./Logger');
+var getType = require('./Utils').getType;
+var extend = require('./Utils').extend;
+// var connection = require('./Connection');
 
 var LOG = new Logger('ALL', '[Request]');
 /**
@@ -175,15 +175,15 @@ function Http(options, callback){
 }
 
 Http.prototype.do = function(resolve, reject){
-	    var self = this;
-	    if (this.options.attempt === 0){      
-    var lastCall = this.calls[this.calls.length - 1];
-    reject({ status: lastCall.status, statusText: lastCall.statusText });
-    self.callback(lastCall.status);
-    clearTimeout(self.timeoutID);
-    self.timeoutID = null;
-    return;
-}
+    var self = this;
+    if (this.options.attempt === 0){      
+        var lastCall = this.calls[this.calls.length - 1];
+        reject({ status: lastCall.status, statusText: lastCall.statusText });
+        self.callback(lastCall.status);
+        clearTimeout(self.timeoutID);
+        self.timeoutID = null;
+        return;
+    }
   
     var xhr;
     if (Http.isXMLHttpRequestSupported()) {
@@ -324,7 +324,7 @@ Http.isXDomainSupported = function() {
     return !!window.XDomainRequest;
 };
 
-export {
+module.exports = {
     Http,
     getImageRaw,
     getJSON,

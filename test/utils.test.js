@@ -1,8 +1,6 @@
-import {
-    queryfy, 
-    dequeryfy, 
-    extend
-} from '../src/modules/Utils';
+var queryfy = require('../src/modules/Utils').queryfy;
+var dequeryfy = require('../src/modules/Utils').dequeryfy;
+var extend = require('../src/modules/Utils').extend;
 
 describe('Utils tests', () => {
     

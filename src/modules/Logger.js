@@ -1,4 +1,3 @@
-"use strict";
 /**
  * @class
  * @alias module:src/modules/Utils.Logger

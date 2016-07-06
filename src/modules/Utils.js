@@ -124,7 +124,7 @@ function getType(obj){
     return ({}).toString.call(obj).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();    
 }
 
-export {
+module.exports = {
     Iterator,
     extend,
     queryfy,

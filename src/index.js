@@ -1,21 +1,20 @@
-import 'babel-polyfill';
-// import Promise from 'promise-polyfill';
-import Logger from './modules/Logger';
-import {
-    extend,
-    dequeryfy
-} from './modules/Utils';
-import { requireCondition } from './modules/Decorators';
-import Facebook from './modules/Facebook';
-import { version, build } from './info.json';
+require('babel-polyfill');
+var Logger = require('./modules/Logger');
+var extend = require('./modules/Utils').extend;
+var dequeryfy = require('./modules/Utils').dequeryfy;
 
-import fileModule from './modules/File';
-import Game from './modules/Game';
-import Connection from './modules/Connection';
+var requireCondition = require('./modules/Decorators').requireCondition;
+var Facebook = require('./modules/Facebook');
+var version = require('./info.json').version;
+var build = require('./info.json').build;
 
-import cookies from 'cookies-js';
-import { DEFAULT_CONFIGURATION } from './stargate.conf.js';
- // import bus from './modules/EventBus';
+var fileModule = require('./modules/File');
+var Game = require('./modules/Game');
+var Connection = require('./modules/Connection');
+
+var cookies = require('cookies-js');
+var DEFAULT_CONFIGURATION = require('./stargate.conf.js');
+// import bus from './modules/EventBus';
 
 var stargateModules = {
     file: fileModule,
@@ -208,7 +207,8 @@ function __deinit__(){
 }
 
 const MESSAGE_INITIALIZED = 'Call after Stargate.initialize() please';
-export default {
+
+module.exports = {
     initialize,
     getVersion,    
     facebookShare: Facebook.facebookShare,
@@ -235,4 +235,4 @@ export default {
     isHybrid,
     isOpen,
     __deinit__
-}
+};

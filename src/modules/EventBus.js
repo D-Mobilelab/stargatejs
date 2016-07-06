@@ -43,6 +43,4 @@ EventBus.prototype.off = function(eventType, func){
 	}
 };
 
-// Export as a singleton
-var eventBusIstance = new EventBus;
-export default eventBusIstance;
+module.exports = EventBus;

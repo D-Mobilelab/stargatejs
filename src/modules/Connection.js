@@ -1,4 +1,5 @@
-import bus from './EventBus';
+var EventBus = require('./EventBus');
+var bus = new EventBus();
 /**
  * Usage
  * Connection.initialize();
@@ -37,7 +38,7 @@ function bindConnectionEvents(){
         // does not work in browsers (Safari, Chrome only works with window, FF both)
         // on cordova you MUST use document.addEventListener       
         window.addEventListener('offline', updateConnectionStatus, false);
-        window.addEventListener('online', updateConnectionStatus, false);
+        window.addEventListener('online', updateConnectionStatus, false);        
     } else {
         document.addEventListener('offline', updateConnectionStatus, false);
         document.addEventListener('online', updateConnectionStatus, false);    
@@ -94,7 +95,7 @@ function checkConnection(){
     return connectionStatus;
 }
 
-export default {
+module.exports = {
     removeListener,
     addListener,
     initialize,

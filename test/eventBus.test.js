@@ -1,13 +1,13 @@
-import eventBus from '../src/modules/EventBus';
+var EventBus = require('../src/modules/EventBus');
 
 describe('EventBus tests', () => {    
-    
+    var eventBus;
     beforeEach(() => {
-        
+        eventBus = new EventBus();
     });
 
     afterEach(() => {
-        eventBus.events.connectionchange = [];
+        eventBus = null;
     });
     
     it('EventBus should trigger with custom data', () => {

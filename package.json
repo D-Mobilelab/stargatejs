@@ -18,8 +18,8 @@
     "postbuild": "npm run gendocs",
     "prepublish": "npm run build",
     "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
-    "test": "karma start --no-auto-watch --single-run",   
-    "test:develop": "karma start --browsers PhantomJS",    
+    "test": "karma start --no-auto-watch --single-run",
+    "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
     "version": "npm run build && git add -A dist docs",
     "postversion": "git push && git push --tags"
@@ -71,6 +71,7 @@
     "watchify": "^3.7.0"
   },
   "dependencies": {
+    "babel-polyfill": "^6.9.1",
     "cookies-js": "^1.2.2",
     "md5": "^2.1.0",
     "promise-polyfill": "^5.0.0"
@@ -82,9 +83,6 @@
         {
           "presets": [
             "es2015"
-          ],
-          "plugins": [
-            "add-module-exports"
           ],
           "comments": false
         }

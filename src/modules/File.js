@@ -1,6 +1,5 @@
-import Promise from 'promise-polyfill';
-import Logger from './Logger';
-import { requireCondition } from './Decorators';
+var Logger = require('./Logger');
+var requireCondition = require('./Decorators').requireCondition;
 /**
  * File module
  * @module src/modules/File
@@ -18,18 +17,18 @@ window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileS
  * Stargate.file.ERROR_MAP
  * */
 File.ERROR_MAP = {
-    1:"NOT_FOUND_ERR",
-    2:"SECURITY_ERR",
-    3:"ABORT_ERR",
-    4:"NOT_READABLE_ERR",
-    5:"ENCODING_ERR",
-    6:"NO_MODIFICATION_ALLOWED_ERR",
-    7:"INVALID_STATE_ERR",
-    8:"SYNTAX_ERR",
-    9:"INVALID_MODIFICATION_ERR",
-    10:"QUOTA_EXCEEDED_ERR",
-    11:"TYPE_MISMATCH_ERR",
-    12:"PATH_EXISTS_ERR"
+    1: 'NOT_FOUND_ERR',
+    2: 'SECURITY_ERR',
+    3: 'ABORT_ERR',
+    4: 'NOT_READABLE_ERR',
+    5: 'ENCODING_ERR',
+    6: 'NO_MODIFICATION_ALLOWED_ERR',
+    7: 'INVALID_STATE_ERR',
+    8: 'SYNTAX_ERR',
+    9: 'INVALID_MODIFICATION_ERR',
+    10: 'QUOTA_EXCEEDED_ERR',
+    11: 'TYPE_MISMATCH_ERR',
+    12: 'PATH_EXISTS_ERR'
 };
 
 File.currentFileTransfer = null;
@@ -56,22 +55,22 @@ File.resolveFS = function(url){
  * @returns {Promise<String|FileError>} where string is a filepath
  */
 File.appendToFile = function(filePath, data, overwrite, mimeType){
-    //Default
+    // Default
     overwrite = arguments[2] === undefined ? false : arguments[2];
-    mimeType = arguments[3] === undefined ? "text/plain" : arguments[3];
+    mimeType = arguments[3] === undefined ? 'text/plain' : arguments[3];
     return File.resolveFS(filePath)
         .then(function(fileEntry){
 
             return new Promise(function(resolve, reject){
                 fileEntry.createWriter(function(fileWriter) {
-                    if(!overwrite){
+                    if (!overwrite){
                         fileWriter.seek(fileWriter.length);
                     }
 
                     var blob;
-                    if(!(data instanceof Blob)){
-                        blob = new Blob([data], {type:mimeType});
-                    }else{
+                    if (!(data instanceof Blob)){
+                        blob = new Blob([data], { type: mimeType });
+                    } else{
                         blob = data;
                     }
 
@@ -96,7 +95,7 @@ File.readFileAsHTML = function(indexPath){
 
     return File.readFile(indexPath)
         .then(function(documentAsString){
-            return new window.DOMParser().parseFromString(documentAsString, "text/html");
+            return new window.DOMParser().parseFromString(documentAsString, 'text/html');
         });
 };
 
@@ -108,9 +107,9 @@ File.readFileAsHTML = function(indexPath){
 File.readFileAsJSON = function(indexPath){
     return File.readFile(indexPath)
         .then(function(documentAsString){
-            try{
+            try {
                 return Promise.resolve(window.JSON.parse(documentAsString));
-            }catch(e){
+            } catch(e){
                 return Promise.reject(e);
             }
         });
@@ -125,9 +124,9 @@ File.readFileAsJSON = function(indexPath){
 File.removeFile = function(filePath){
     return File.resolveFS(filePath)
         .then(function(fileEntry){
-            return new Promise(function(resolve,reject){
+            return new Promise(function(resolve, reject){
                 fileEntry.remove(function(result){
-                    resolve(result === null || result === "OK");
+                    resolve(result === null || result === 'OK');
                 }, reject);
             });
         });
@@ -144,7 +143,7 @@ File.removeDir = function(dirpath){
         .then(function(dirEntry){
             return new Promise(function(resolve, reject){
                 dirEntry.removeRecursively(function(result){
-                    resolve(result === null || result === "OK");
+                    resolve(result === null || result === 'OK');
                 }, reject);
             });
         });
@@ -161,8 +160,8 @@ File.removeDir = function(dirpath){
  * */
 File._promiseZip = function(zipPath, outFolder, _onProgress){
 
-    LOG.d("PROMISEZIP:", arguments);
-    return new Promise(function(resolve,reject){
+    LOG.d('PROMISEZIP:', arguments);
+    return new Promise(function(resolve, reject){
         window.zip.unzip(zipPath, outFolder, function(result){
             if (result === 0){
                 resolve(true);
@@ -198,7 +197,7 @@ File.download = function(url, filepath, saveAsName, _onProgress){
                 reject(reason);
                 self.ft = null;
             },
-            true //trustAllHosts
+            true // trustAllHosts
         );
     });
 };
@@ -214,7 +213,7 @@ File.createDir = function(dirPath, subFolderName){
     return File.resolveFS(dirPath)
         .then(function(dirEntry){
             return new Promise(function(resolve, reject){
-                dirEntry.getDirectory(subFolderName, {create:true}, function(entry){
+                dirEntry.getDirectory(subFolderName, { create: true }, function(entry){
                     resolve(__transform([entry]));
                 }, reject);
             });
@@ -283,7 +282,7 @@ File.readDir = function(dirPath){
             return new Promise(function(resolve, reject){
                 var reader = dirEntry.createReader();
                 reader.readEntries(function(entries){
-                    LOG.d("readDir:",entries);
+                    LOG.d('readDir:', entries);
                     resolve(__transform(entries));
                 }, reject);
             });
@@ -311,9 +310,9 @@ File.readFile = function(filePath) {
                         resolve(textToParse);
                     };
                     reader.readAsText(file);
-                    //readAsDataURL
-                    //readAsBinaryString
-                    //readAsArrayBuffer
+                    // readAsDataURL
+                    // readAsBinaryString
+                    // readAsArrayBuffer
                 });
             });
         });
@@ -330,7 +329,7 @@ File.createFile = function(directory, filename){
     return File.resolveFS(directory)
         .then(function(dirEntry){
             return new Promise(function(resolve, reject){
-                dirEntry.getFile(filename, {create:true}, function(entry){
+                dirEntry.getFile(filename, { create: true }, function(entry){
                     resolve(__transform([entry]));
                 }, reject);
             });
@@ -356,13 +355,13 @@ File.write = function(filepath, content){
  * @returns {Promise<FileEntry|FileError>}
  * */
 File.moveDir = function(source, destination){
-    var newFolderName = destination.substring(destination.lastIndexOf('/')+1);
-    var parent = destination.replace(newFolderName, "");
+    var newFolderName = destination.substring(destination.lastIndexOf('/') + 1);
+    var parent = destination.replace(newFolderName, '');
     
-    LOG.d("moveDir:", parent, newFolderName);
+    LOG.d('moveDir:', parent, newFolderName);
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
-            LOG.d("moveDir: resolved entries", entries);
+            LOG.d('moveDir: resolved entries', entries);
             return new Promise(function(resolve, reject){
                 entries[0].moveTo(entries[1], newFolderName, resolve, reject);
             });
@@ -376,13 +375,13 @@ File.moveDir = function(source, destination){
  * @returns {Promise<FileEntry|FileError>}
  * */
 File.copyFile = function(source, destination){
-    var newFilename = destination.substring(destination.lastIndexOf('/')+1);
-    var parent = destination.replace(newFilename, "");
+    var newFilename = destination.substring(destination.lastIndexOf('/') + 1);
+    var parent = destination.replace(newFilename, '');
 
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
-            //TODO: check if are really files
-            LOG.d("copyFileTo", entries);
+            // TODO: check if are really files
+            LOG.d('copyFileTo', entries);
             return new Promise(function(resolve, reject){
                 entries[0].copyTo(entries[1], newFilename, resolve, reject);
             });
@@ -396,12 +395,12 @@ File.copyFile = function(source, destination){
  * @returns {Promise<FileEntry|FileError>}
  * */
 File.copyDir = function(source, destination){
-    var newFolderName = destination.substring(destination.lastIndexOf('/')+1);
-    var parent = destination.replace(newFolderName, "");
+    var newFolderName = destination.substring(destination.lastIndexOf('/') + 1);
+    var parent = destination.replace(newFolderName, '');
 
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
-            LOG.d("copyDir", source, "in",destination);
+            LOG.d('copyDir', source, 'in', destination);
             return new Promise(function(resolve, reject){
                 entries[0].copyTo(entries[1], newFolderName, resolve, reject);
             });
@@ -416,8 +415,8 @@ File.copyDir = function(source, destination){
 File.getMetadata = function(path){
     return File.resolveFS(path)
                 .then(function(entry){
-                    return new Promise(function(resolve,reject){
-                        entry.getMetadata(resolve,reject);
+                    return new Promise(function(resolve, reject){
+                        entry.getMetadata(resolve, reject);
                     });                        
                 });
 };
@@ -431,11 +430,11 @@ File.getMetadata = function(path){
 function __transform(entries){
     var arr = entries.map(function(entry){
         return {
-            fullPath:entry.fullPath,
-            path:entry.toURL(),
-            internalURL:entry.toInternalURL(),
-            isFile:entry.isFile,
-            isDirectory:entry.isDirectory
+            fullPath: entry.fullPath,
+            path: entry.toURL(),
+            internalURL: entry.toInternalURL(),
+            isFile: entry.isFile,
+            isDirectory: entry.isDirectory
         };
     });
     return (arr.length === 1) ? arr[0] : arr;
@@ -453,4 +452,4 @@ Object.keys(File).map((methodName) => {
                                         'warn');
 });
 
-export default File;
+module.exports = File;

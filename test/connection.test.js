@@ -1,6 +1,6 @@
-import connection from '../src/modules/Connection';
-import simulateEvent from './helpers/SimulateEvent';
-import netInfoMock from './helpers/cordova-plugin-network-information';
+var connection = require('../src/modules/Connection');
+var simulateEvent = require('./helpers/SimulateEvent');
+var netInfoMock = require('./helpers/cordova-plugin-network-information');
 
 describe('Connection tests', () => {
 

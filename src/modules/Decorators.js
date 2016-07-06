@@ -9,7 +9,7 @@
  * @throws {Error}
  * @returns {Function} 
  */
-function requireCondition(param, afterFunction, context = null, message, type){ 
+module.exports.requireCondition = function(param, afterFunction, context = null, message, type){ 
 	return function(){
         if (typeof param === 'function'){
             param = param.call(null);
@@ -34,6 +34,3 @@ function requireCondition(param, afterFunction, context = null, message, type){
 		}
 	};
 }
-
-
-export { requireCondition };

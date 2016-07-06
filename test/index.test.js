@@ -1,10 +1,10 @@
-import cookies from 'cookies-js';
-import Stargate from '../src/index';
-import simulateEvent from './helpers/SimulateEvent';
-import cordovaMock from './helpers/cordova';
-import fileMock from './helpers/cordova-plugin-file';
-import { UnzipMock } from './helpers/cordova-plugin-unzip';
-import deviceMock from './helpers/cordova-plugin-device';
+var cookies = require('cookies-js');
+var Stargate = require('../src/index');
+var simulateEvent = require('./helpers/SimulateEvent');
+var cordovaMock = require('./helpers/cordova');
+var fileMock = require('./helpers/cordova-plugin-file');
+var UnzipMock = require('./helpers/cordova-plugin-unzip').UnzipMock;
+var deviceMock = require('./helpers/cordova-plugin-device');
 
 // Used to replace-mock window in some cases   
 var ctx = {
@@ -19,7 +19,7 @@ var ctx = {
 describe('Stargate public interface tests 1', () => {
 
     beforeAll(() => {
-        //jasmine.clock().install();
+        // jasmine.clock().install();
     });
 
     afterAll(() => {
