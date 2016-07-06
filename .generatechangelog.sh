@@ -1,0 +1,1 @@
+git log $(git describe --abbrev=0 --tags)..HEAD --no-merges --format=%B >> CHANGELOG.md
