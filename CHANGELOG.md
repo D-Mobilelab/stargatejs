@@ -1,4 +1,4 @@
-[view](http://github.com/D-Mobilelab/stargate/commit/ceb4043eb005be6c61b2d429d4ea71ae5f909661) * add: added removeListener test for connection module
+[view](http://github.com/D-Mobilelab/stargate/commit/d6655c14a5b0c4e9ccb54962778042ab0ebd2b36) * add: added removeListener test for connection module
 [view](http://github.com/D-Mobilelab/stargate/commit/012653511b37c353ff944690c7df62b3b957549f) * fix: toInternalURL does not exists in browser case. check added
 [view](http://github.com/D-Mobilelab/stargate/commit/7ea40de71db5538d269a7cadc5287a1f96b1f706) * chg: changelog script updated sh .generatechangelog <oldtag> <newtag> <user> <reponame>
 [view](http://github.com/D-Mobilelab/stargate/commit/7bbf7e98152a83a65c24f5ad19424e8719f01e01) * Generate changelog script
