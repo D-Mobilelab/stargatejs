@@ -22,7 +22,7 @@ describe('Connection tests', () => {
 
         setTimeout(() => {
             expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'offline' });
-            connection.removeListener('connectionchange', onchange);
+            // connection.removeListener('connectionchange', onchange);
             done();
         }, 600);
     });
@@ -54,7 +54,7 @@ describe('Connection tests', () => {
         setTimeout(() => {
            expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'online' });
            netInfoMock.uninstall();
-           connection.removeListener('connectionchange', onchange);
+           // connection.removeListener('connectionchange', onchange);
            done();
        }, 600);
     });
@@ -75,8 +75,30 @@ describe('Connection tests', () => {
         setTimeout(() => {
             expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'offline' });
             done();
-            connection.removeListener('connectionchange', onchange);
+            // connection.removeListener('connectionchange', onchange);
             netInfoMock.uninstall();
         }, 600);
     });
+
+        
+    it('Test removeListener', (done) => {
+        
+        connection.initialize();
+
+        var onchange = jasmine.createSpy('connchange');
+        connection.addListener('connectionchange', onchange);
+
+        // mock it
+        window.navigator.connection.type = 'wifi';
+
+        connection.removeListener('connectionchange', onchange);
+        // Simulate Event
+        simulateEvent('offline', { _type: 'offline' }, 1, 'window');
+
+        setTimeout(() => {
+            expect(onchange).not.toHaveBeenCalledWith();
+            done();
+        }, 600);
+    });
+    
 });

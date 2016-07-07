@@ -4,7 +4,7 @@ var unzipMock = require('./helpers/cordova-plugin-unzip');
 var deviceMock = require('./helpers/cordova-plugin-device');
 var File = require('../src/modules/File');
 
-fdescribe('File interface test', () => {
+describe('File interface test', () => {
 
     // UTILITIES FUNCTION
     function createFile(folder, name){
