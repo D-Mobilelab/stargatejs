@@ -1,1 +1,1 @@
-git log $(git describe --abbrev=0 --tags)..HEAD --no-merges --format=%B >> CHANGELOG.md
+git log $1...$2 --pretty=format:'[view](http://github.com/'$3'/'$4'/commit/%H) * %s'
