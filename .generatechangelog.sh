@@ -1,1 +1,0 @@
-git log $1...$2 --pretty=format:'[view](http://github.com/'$3'/'$4'/commit/%H) * %s'

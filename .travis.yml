@@ -6,7 +6,8 @@ git:
 before_install:
   - export CHROME_BIN=/usr/bin/google-chrome
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start  
+  - sh -e /etc/init.d/xvfb start
+  - npm install git-changelog -g
   - npm install  
   - sudo apt-get update
   - sudo apt-get install -y libappindicator1 fonts-liberation
