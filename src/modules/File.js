@@ -58,9 +58,9 @@ File.appendToFile = function(filePath, data, overwrite, mimeType){
     // Default
     overwrite = arguments[2] === undefined ? false : arguments[2];
     mimeType = arguments[3] === undefined ? 'text/plain' : arguments[3];
+    
     return File.resolveFS(filePath)
         .then(function(fileEntry){
-
             return new Promise(function(resolve, reject){
                 fileEntry.createWriter(function(fileWriter) {
                     if (!overwrite){
@@ -70,7 +70,7 @@ File.appendToFile = function(filePath, data, overwrite, mimeType){
                     var blob;
                     if (!(data instanceof Blob)){
                         blob = new Blob([data], { type: mimeType });
-                    } else{
+                    } else {
                         blob = data;
                     }
 
@@ -432,7 +432,7 @@ function __transform(entries){
         return {
             fullPath: entry.fullPath,
             path: entry.toURL(),
-            internalURL: entry.toInternalURL(),
+            internalURL: entry.toInternalURL ? entry.toInternalURL() : '',
             isFile: entry.isFile,
             isDirectory: entry.isDirectory
         };
