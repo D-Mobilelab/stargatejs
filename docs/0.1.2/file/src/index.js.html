@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/index.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/D-Mobilelab/stargate.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/index.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">require(&apos;babel-polyfill&apos;);
+var Logger = require(&apos;./modules/Logger&apos;);
+var extend = require(&apos;./modules/Utils&apos;).extend;
+var dequeryfy = require(&apos;./modules/Utils&apos;).dequeryfy;
+
+var requireCondition = require(&apos;./modules/Decorators&apos;).requireCondition;
+var Facebook = require(&apos;./modules/Facebook&apos;);
+var version = require(&apos;./info.json&apos;).version;
+var build = require(&apos;./info.json&apos;).build;
+
+var fileModule = require(&apos;./modules/File&apos;);
+var Game = require(&apos;./modules/Game&apos;);
+var Connection = require(&apos;./modules/Connection&apos;);
+
+var cookies = require(&apos;cookies-js&apos;);
+var DEFAULT_CONFIGURATION = require(&apos;./stargate.conf.js&apos;);
+// import bus from &apos;./modules/EventBus&apos;;
+
+var stargateModules = {
+    file: fileModule,
+    game: new Game()
+};
+var LOG = new Logger(&apos;all&apos;, &apos;[Stargate]&apos;);
+var initialized = false;
+var isStargateOpen = false;
+var CUSTOM_CONF = {};
+
+var initPromise;
+var modulesLoaded;
+
+/**
+ * Stargate.initialize waits the cordova deviceready if runs in hybrid env
+ * @param {Object} [configuration={DEVICE_READY_TIMEOUT: 5000, modules: [[&apos;file&apos;, {}]]}] - the object configuration
+ * @param {Number} configuration.DEVICE_READY_TIMEOUT how much to wait the deviceready event in ms
+ * @param {Function} [callback=function(){}] - callback called when deviceready arrives
+ * @returns {Promise&lt;Object|Timeout&gt;}
+ */
+function initialize(configuration = {}, callback = function(){}){
+    if (initPromise){ 
+        LOG.w(&apos;Initialized already called&apos;);
+        return initPromise; 
+    }
+    
+    CUSTOM_CONF = extend(DEFAULT_CONFIGURATION, configuration);
+    
+    // if isHybrid wait deviceready otherwise just call init 
+    if (isHybrid()) {
+        LOG.i(&apos;Hybrid init&apos;);
+        initPromise = new Promise((resolve, reject) =&gt; {
+            document.addEventListener(&apos;deviceready&apos;, function onready(e){
+                resolve(e);
+                document.removeEventListener(&apos;deviceready&apos;, onready);
+            });
+
+            // Reject the promise after 5s
+            setTimeout(() =&gt; { 
+                isStargateOpen = false;
+                initialized = false;
+                reject([&apos;deviceready timeout&apos;, CUSTOM_CONF.DEVICE_READY_TIMEOUT].join(&apos; &apos;)); 
+            }, CUSTOM_CONF.DEVICE_READY_TIMEOUT);
+        }).then((readyEvent) =&gt; {
+            LOG.i(&apos;ReadyEvent&apos;, readyEvent);           
+            
+            modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
+            Connection.initialize();   
+            callback(&apos;OK&apos;);
+            return Promise.all(modulesLoaded);            
+        });
+        
+    } else {
+        LOG.i(&apos;No hybrid init&apos;);
+        modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
+        Connection.initialize();
+        initPromise = Promise.all(modulesLoaded);
+    }
+    
+    return initPromise.then((results) =&gt; {
+        initialized = true;
+        isStargateOpen = true;
+        return results;
+    });    
+}
+
+function moduleInitializer(moduleAndConf){
+    var name = moduleAndConf[0];
+    var conf = moduleAndConf[1];
+    if (stargateModules[name]){
+        if (stargateModules[name].initialize){
+            return stargateModules[name].initialize(conf);    
+        } else {
+            return Promise.resolve([name, true]);
+        }                       
+    } else { 
+        LOG.w([name, &apos;unsupported&apos;].join(&apos; &apos;));
+        return Promise.reject([name, &apos;unsupported&apos;].join(&apos; &apos;));
+    }
+}
+
+/**
+ * 
+ * initModule waits the main initialization 
+ * @param {Array&lt;String|Object&gt;} moduleAndConf - modulename and configuration object 
+ */
+function initModule(moduleAndConf){
+    if (!initPromise) { return Promise.reject(&apos;Stargate.initialize needs to be called first&apos;); }
+
+    return initPromise.then(() =&gt; moduleInitializer(moduleAndConf));
+}
+
+/**
+ * Get the semantic version of stargate library
+ * @static
+ * @returns {String}
+ */
+function getVersion() {
+    return [version, build];
+}
+
+/**
+ * Returns true if the deviceready event has arrived
+ * @static
+ * @returns {Boolean}
+ */
+function isInitialized(){
+    return initialized;
+}
+
+/**
+ * Check if stargate is running in hybrid environment: 
+ * in order:check the protocol, check cookie if any, localStorage if any
+ * @param {Object} ctx - only for testing purporse
+ * @static
+ * @returns {Boolean}
+ */
+function isHybrid(ctx){
+    
+    // Check url for hybrid query param
+    
+    var location = window.document.location;
+    if (ctx) { 
+        location = ctx.document.location;
+    }
+    var uri = location.href;
+    var queryStringObject = dequeryfy(uri);
+    var protocol = location.protocol;
+
+    if (queryStringObject.hasOwnProperty(&apos;stargateVersion&apos;)) {
+        window.localStorage.setItem(&apos;stargateVersion&apos;, queryStringObject.stargateVersion);
+        cookies.set(&apos;stargateVersion&apos;, queryStringObject.stargateVersion, { expires: Infinity });
+    }
+
+    if (queryStringObject.hasOwnProperty(&apos;hybrid&apos;)) {
+        window.localStorage.setItem(&apos;hybrid&apos;, 1);
+        cookies.set(&apos;hybrid&apos;, &apos;1&apos;, { expires: Infinity });
+    }
+
+    if ((protocol === &apos;file:&apos; || protocol === &apos;cdvfile:&apos;)) {
+        return true;
+    }
+
+    if (window.localStorage.getItem(&apos;hybrid&apos;)) {
+        return true;
+    }
+
+    if (cookies.get(&apos;hybrid&apos;)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @deprecated
+ */
+function isOpen (){
+    return isStargateOpen;
+}
+
+/**
+ * Register a listener for a series of events. Callable after initialize
+ * @param {String} type - connectionchange for example
+ * @param {Function} fn - the function to call when the event occurs
+ */
+function addListener(type, fn){
+    Connection.addListener(type, fn);
+}
+
+/**
+ * Remoe a listener for a series of events
+ * @param {String} type - connectionchange for example
+ * @param {Function} fn - the function to call when the event occurs
+ */
+function removeListener(type, fn){
+    Connection.removeListener(type, fn);
+}
+
+/**
+ * just for test
+ */
+function __deinit__(){
+    initPromise = null; 
+    initialized = false; 
+    isStargateOpen = false;
+    localStorage.removeItem(&apos;hybrid&apos;);
+    localStorage.removeItem(&apos;stargateVersion&apos;);
+    cookies.expire(&apos;hybrid&apos;);
+    cookies.expire(&apos;stargateVersion&apos;);
+}
+
+const MESSAGE_INITIALIZED = &apos;Call after Stargate.initialize() please&apos;;
+
+module.exports = {
+    initialize,
+    getVersion,    
+    facebookShare: Facebook.facebookShare,
+    facebookLogin: Facebook.facebookLogin,
+    addListener: requireCondition(isInitialized, 
+                                    addListener, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    &apos;warn&apos;),
+    removeListener: requireCondition(isInitialized, 
+                                    removeListener, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    &apos;warn&apos;),
+    checkConnection: requireCondition(isInitialized, 
+                                    Connection.checkConnection, 
+                                    null, 
+                                    MESSAGE_INITIALIZED, 
+                                    &apos;warn&apos;),
+    file: stargateModules.file,
+    game: stargateModules.game,
+    initModule,
+    isInitialized,
+    isHybrid,
+    isOpen,
+    __deinit__
+};</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

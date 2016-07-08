@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/modules/Http.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/D-Mobilelab/stargate.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/modules/Http.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">var Logger = require(&apos;./Logger&apos;);
+var getType = require(&apos;./Utils&apos;).getType;
+var extend = require(&apos;./Utils&apos;).extend;
+// var connection = require(&apos;./Connection&apos;);
+
+var LOG = new Logger(&apos;ALL&apos;, &apos;[Request]&apos;);
+/**
+ * getJSON
+ *
+ * @alias module:src/modules/Http.getJSON
+ * @param {String} url - for example http://jsonplaceholder.typicode.com/comments?postId=1
+ * @returns {Promise&lt;Object|String&gt;} the string error is the statuscode
+ * */
+function getJSON(url){
+    url = encodeURI(url);
+    var xhr = typeof XMLHttpRequest !== &apos;undefined&apos; ? new XMLHttpRequest() : new ActiveXObject(&apos;Microsoft.XMLHTTP&apos;);
+
+    var responseTypeAware = &apos;responseType&apos; in xhr;
+
+    xhr.open(&apos;GET&apos;, url, true);
+    if (responseTypeAware) {
+        xhr.responseType = &apos;json&apos;;
+    }
+
+    var daRequest = new Promise(function(resolve, reject){
+        xhr.onreadystatechange = function(){
+            var result;
+            if (xhr.readyState === 4) {
+                try {
+                    result = responseTypeAware ? xhr.response : JSON.parse(xhr.responseText);
+                    resolve(result);
+                } catch (e){
+                    reject(e);
+                }
+            }
+        };
+    });
+
+    xhr.setRequestHeader(&apos;Content-type&apos;, &apos;application/json; charset=UTF-8&apos;);
+    xhr.send();
+    return daRequest;
+}
+
+/**
+ * Make a jsonp request, remember only GET
+ * The function create a tag script and append a callback param in querystring.
+ * The promise will be reject after 3s if the url fail to respond
+ *
+ * @class
+ * @alias module:src/modules/Http.jsonpRequest
+ * @example
+ * request = new jsonpRequest(&quot;http://www.someapi.com/asd?somequery=1&quot;);
+ * request.then(...)
+ * @param {String} url - the url with querystring but without &amp;callback at the end or &amp;function
+ * @returns {Promise&lt;Object|String&gt;}
+ * */
+function jsonpRequest(url){
+    var self = this;
+    self.timeout = 3000;
+    self.called = false;
+    if (window.document) {
+        var ts = Date.now();
+        self.scriptTag = window.document.createElement(&apos;script&apos;);
+        url += &apos;&amp;callback=window.__jsonpHandler_&apos; + ts;
+        self.scriptTag.src = url;
+        self.scriptTag.type = &apos;text/javascript&apos;;
+        self.scriptTag.async = true;
+
+        self.prom = new Promise(function(resolve, reject){
+            var functionName = &apos;__jsonpHandler_&apos; + ts;
+            window[functionName] = function(data){
+                self.called = true;
+                resolve(data);
+                self.scriptTag.parentElement.removeChild(self.scriptTag);
+                delete window[functionName];
+            };
+            // reject after a timeout
+            setTimeout(function(){
+                if (!self.called){
+                    reject(&apos;Timeout jsonp request &apos; + ts);
+                    self.scriptTag.parentElement.removeChild(self.scriptTag);
+                    delete window[functionName];
+                }
+            }, self.timeout);
+        });
+        // the append start the call
+        window.document.getElementsByTagName(&apos;head&apos;)[0].appendChild(self.scriptTag);        
+    }
+}
+
+/**
+ * getImageRaw from a specific url
+ *
+ * @alias module:src/modules/Utils.getImageRaw
+ * @param {Object} options - the options object
+ * @param {String} options.url - http or whatever
+ * @param {String} [options.responseType=&quot;blob&quot;] - possible values arraybuffer|blob
+ * @param {String} [options.mimeType=&quot;image/jpeg&quot;] - possible values &quot;image/png&quot;|&quot;image/jpeg&quot; used only if &quot;blob&quot; is set as responseType
+ * @param {Function} [_onProgress=function(){}]
+ * @returns {Promise&lt;Blob|ArrayBuffer|Error&gt;}
+ */
+function getImageRaw(options, _onProgress){
+    var onProgress = _onProgress || function(){};
+    return new Promise(function(resolve, reject){
+        var request = new XMLHttpRequest();
+        request.open(&apos;GET&apos;, options.url, true);
+        request.responseType = options.responseType || &apos;blob&apos;;
+        request.withCredentials = true;
+        function transferComplete(){
+            var result;
+            switch (options.responseType){
+            case &apos;blob&apos;:
+                result = new Blob([this.response], { type: options.mimeType || &apos;image/jpeg&apos; });
+                break;
+            case &apos;arraybuffer&apos;:
+                result = this.response;
+                break;
+            default:
+                result = this.response;
+                resolve(result);
+                break;
+
+            }
+        }
+
+        var transferCanceled = reject;
+        var transferFailed = reject;
+
+        request.addEventListener(&apos;progress&apos;, onProgress, false);
+        request.addEventListener(&apos;load&apos;, transferComplete, false);
+        request.addEventListener(&apos;error&apos;, transferFailed, false);
+        request.addEventListener(&apos;abort&apos;, transferCanceled, false);
+
+        request.send(null);
+    });
+
+}
+
+var defaultOptions = {
+    method: &apos;GET&apos;,
+    url: &apos;&apos;,
+    attempt: 1,
+    responseType: &apos;json&apos;, // json, document, &quot;&quot;, text, blob, arraybuffer
+    dataType: &apos;json&apos;, // the type of data sent(if any)
+    callback(){},
+    headers: {},
+    data: null,
+    withCredentials: false,
+    async: true,
+    mimeType: &apos;&apos;, // image/png&quot;|&quot;image/jpeg|text/plain mimeType only used when responseType is blob!
+    retryAfter: 0, // ms, used if attempt &gt; 1
+    onProgress(){}
+};
+
+/**
+ * The Http class
+ * @constructor
+ * @alias module:src/Http
+ * @param {Object} requestParams - object where you can specify the options of the request
+ * @param {String} [requestParams.type=POST] - the type of the request: possible values POST, GET, PUT, DELETE
+ * @param {String} requestParams.url - the url to request for
+ * @param {Object} [requestParams.headers={&quot;Accept&quot;:&quot;application/json&quot;}] - the headers object
+ * @param {String} [requestParams.timeout=2000] - the timeout of the request in ms
+ * @param {Boolean} [requestParams.async=true] -
+ * @returns {Promise}
+ * */
+function Http(options, callback){  
+    var self = this;
+    this.options = extend(defaultOptions, options);  
+    this.calls = [];
+    this.callback = callback || function(){};
+    this.promise = new Promise(function(resolve, reject){
+        self.do(resolve, reject);
+    });
+}
+
+Http.prototype.do = function(resolve, reject){
+    var self = this;
+    if (this.options.attempt === 0){      
+        var lastCall = this.calls[this.calls.length - 1];
+        reject({ status: lastCall.status, statusText: lastCall.statusText });
+        self.callback(lastCall.status);
+        clearTimeout(self.timeoutID);
+        self.timeoutID = null;
+        return;
+    }
+  
+    var xhr;
+    if (Http.isXMLHttpRequestSupported()) {
+    // code for IE7+, Firefox, Chrome, Opera, Safari
+      xhr = new XMLHttpRequest();
+  } else {
+    // code for IE6, IE5
+      xhr = new ActiveXObject(&apos;Microsoft.XMLHTTP&apos;);
+  }
+  
+  // store this request in the object
+    this.calls.push(xhr);
+  
+  // OPEN
+    xhr.open(this.options.method.toUpperCase(),
+           this.options.url, 
+           this.options.async);
+  
+  // SENDING JSON?
+    if (self.options.dataType === &apos;json&apos;){
+      self.options.data = JSON.stringify(self.options.data);
+      xhr.setRequestHeader(&apos;Content-type&apos;, &apos;application/json; charset=UTF-8&apos;);        
+  }  
+  
+  // CUSTOM HEADERS
+    if (this.options.headers){
+      addCustomHeaders(this.options.headers, xhr);    
+  }
+  
+  // CORS
+    if (this.options.withCredentials &amp;&amp; Http.isCORSSupported()){
+      xhr.withCredentials = true;    
+  }  
+  
+  // check responseType support
+    var responseTypeAware = &apos;responseType&apos; in xhr;
+  
+    if (responseTypeAware){    
+      xhr.responseType = this.options.responseType;    
+  }
+  
+    LOG.d(&apos;responseType setted to &apos;, xhr.responseType);
+  
+    xhr.onreadystatechange = function(event){
+  		    if (xhr.readyState === xhr.DONE) {
+      if (xhr.status &gt;= 200 &amp;&amp; xhr.status &lt; 400) {                    
+                if (xhr.responseType === &apos;blob&apos;){
+                    LOG.d(&apos;BLOB CASE!&apos;);
+                    
+                    // try to infer mimetype from extension?
+                    var blob = new Blob([xhr.response], { type: self.options.mimeType });
+                    var fileReader = new FileReader();
+                    
+                    fileReader.onload = function(event){ 
+                        var raw = event.target.result;    
+                        resolve([raw, xhr.status, xhr]);
+                    };
+                    
+                    fileReader.readAsDataURL(blob);
+                    
+                } else {
+                    var result = parseResponse.bind(self)(xhr);   
+                    resolve(result);
+                    self.callback(result);    
+                }               
+                       
+                self.options.attempt = 0;
+            } else {
+                // statusCode &gt;= 400 retry                
+                self.timeoutID = setTimeout(function(){
+                    self.options.attempt -= 1;
+                    console.log(&apos;FAIL. &apos; + xhr.status + &apos; still more &apos;, self.options.attempt, &apos; attempts&apos;);                        
+                    self.do(resolve, reject);
+                }, self.options.retryAfter);                
+            }
+  		}
+  };
+
+    xhr.onprogress = wrapProgress(self.options.onProgress);
+    xhr.send(self.options.data);  
+};
+
+function parseResponse(xhr){
+    var parsed;
+    var self = this;
+    if (window.karma || window.parent.karma){
+        // #]*&#xA7; WTF!!
+        LOG.i(&apos;TESTING MODE&apos;);
+        xhr.responseType = self.options.responseType;
+    }                        
+    LOG.d(&apos;responseType in readyState &apos;, xhr.responseType);                                                                                
+    if (xhr.responseType === &apos;json&apos; || xhr.responseType === &apos;arraybuffer&apos;){
+        LOG.d(&apos;JSON CASE!&apos;, xhr.response);                        
+        parsed = xhr.response;
+    } else if (xhr.responseType === &apos;document&apos;){
+        LOG.d(&apos;DOCUMENT CASE!&apos;, xhr.responseXML);
+        parsed = xhr.responseXML;
+    } else if (xhr.responseType === &apos;text&apos; || xhr.responseType === &apos;&apos;){
+        LOG.d(&apos;TEXT CASE!&apos;);                
+        parsed = xhr.responseText;
+    } else {
+        LOG.d(&apos;DEFAULT CASE!&apos;, xhr.responseText);
+        parsed = xhr.responseText;
+    }
+    
+    return [parsed, xhr.status, xhr];
+}
+
+function wrapProgress(fn){
+     return function(progressEvent){
+        if (progressEvent.lengthComputable) {
+            var percentComplete = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            return fn(percentComplete);            
+        } else {
+            return fn(&apos;loading&apos;);
+        }
+    }; 
+ }
+
+function addCustomHeaders(headersObj, xhr){
+    for (var k in headersObj){
+        if (headersObj.hasOwnProperty(k)){
+            xhr.setRequestHeader(k, headersObj[k]);           
+        }
+    }
+}
+
+// Static Methods
+Http.isXMLHttpRequestSupported = function() {
+    return !!window.XMLHttpRequest;
+};
+
+Http.isCORSSupported = function() {
+    return &apos;withCredentials&apos; in new XMLHttpRequest;
+};
+
+Http.isXDomainSupported = function() {
+    return !!window.XDomainRequest;
+};
+
+module.exports = {
+    Http,
+    getImageRaw,
+    getJSON,
+    jsonpRequest
+};</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
