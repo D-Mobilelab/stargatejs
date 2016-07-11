@@ -68,7 +68,7 @@ describe('File interface test', () => {
         deviceMock.uninstall();
         fileMock.uninstall();
         unzipMock.uninstall();
-        cordovaMock.uninstall(1);
+        cordovaMock.uninstall();
     });
 
     it('Test resolveLocalFileSystemURL support', () => {
