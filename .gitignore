@@ -1,2 +1,5 @@
 node_modules
 src5
+docs
+dist
+coverage
