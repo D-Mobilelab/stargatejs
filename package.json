@@ -2,7 +2,7 @@
   "name": "stargate",
   "version": "0.1.2",
   "description": "",
-  "main": "src/index.js",
+  "main": "src5/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/D-Mobilelab/stargate.git"
@@ -13,7 +13,7 @@
     "clean": "npm run clean:docs & npm run clean:dist",
     "lint": "eslint src test",
     "prebuild": "npm run clean && sh .getrevision.sh",
-    "build": "browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
+    "build": "babel src --out-dir src5 && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
     "minify": "uglifyjs dist/stargate.js --compress --source-map dist/stargate.js.map --output dist/stargate.min.js",
     "postbuild": "npm run gendocs",
     "prepublish": "npm run build",

@@ -1,27 +1,27 @@
-import simulateEvent from './SimulateEvent';
+var simulateEvent = require('./SimulateEvent');
 
-function CordovaMock(){}
+class CordovaMock {
+    install(devicereadyAfter = 6){
+        window.cordova = {
+            exec: function(success, fail, service, action, args){
+                
+            },
+            getAppVersion: function(){
 
- CordovaMock.prototype.install = function(devicereadyAfter = 6){
-    window.cordova = {
-        exec: function(success, fail, service, action, args){
-            
-        },
-        getAppVersion: function(){
+            },
+            version: '4.1.1'
+        };
+        window.plugins = {};
+        simulateEvent('deviceready', { pippo: 1, pappo: 2 }, devicereadyAfter * 1000, 'document');
+    }
 
-        },
-        version: '4.1.1'
-    };
-    window.plugins = {};
-    simulateEvent('deviceready', { pippo: 1, pappo: 2 }, devicereadyAfter * 1000, 'document');
-};
-
-CordovaMock.prototype.uninstall = function(){
-    if (window.cordova){
-        delete window.cordova;
-        delete window.plugins;        
-    }   
-};
+    uninstall(){
+        if (window.cordova){
+            delete window.cordova;
+            delete window.plugins;        
+        }   
+    }
+}
 
 var cordovaMock = new CordovaMock();
-export default cordovaMock;
+module.exports = cordovaMock;

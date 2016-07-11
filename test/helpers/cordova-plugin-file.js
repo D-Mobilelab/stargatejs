@@ -34,4 +34,4 @@ FilePluginMock.prototype.uninstall = function(){
 
 var filePluginMock = new FilePluginMock({ appID: 'com.company.appname' });
 
-export default filePluginMock;
+module.exports = filePluginMock;

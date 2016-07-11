@@ -21,4 +21,4 @@ function simulateEvent(eventName, attrs, time, target){
     }, time || 1000);
 }
 
-export default simulateEvent;
+module.exports = simulateEvent;

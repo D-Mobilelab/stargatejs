@@ -60,4 +60,4 @@ UnzipMock.prototype.getLastOperation = function(){
 };
 
 var unzipMock = new UnzipMock();
-export default unzipMock;
+module.exports = unzipMock;

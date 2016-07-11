@@ -19,4 +19,4 @@ DeviceMock.prototype.uninstall = function(){
 
 var deviceMock = new DeviceMock();
 
-export default deviceMock;
+module.exports = deviceMock;

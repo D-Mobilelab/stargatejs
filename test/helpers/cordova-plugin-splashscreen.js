@@ -18,4 +18,4 @@ SplashScreenMock.prototype.uninstall = function(){
 };
 
 var splashScreenInstance = new SplashScreenMock();
-export default splashScreenInstance;
+module.exports = splashScreenInstance;

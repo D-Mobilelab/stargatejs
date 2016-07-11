@@ -26,7 +26,7 @@ NetInfoMock.prototype.uninstall = function(){
 };
 
 var netInfoMock = new NetInfoMock();
-export default netInfoMock;
+module.exports = netInfoMock;
 
  /*   <plugin name="cordova-plugin-file" spec="~4.1.0" />
     <plugin name="cordova-plugin-file-transfer" spec="~1.5.0" />
