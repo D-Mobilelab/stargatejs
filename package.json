@@ -18,10 +18,10 @@
     "postbuild": "npm run gendocs",
     "prepublish": "npm run build",
     "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
-    "test": "karma start --no-auto-watch --single-run",
+    "test": "npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
-    "version": "npm run build && git add -A dist/ docs/ src/info.json esdoc.json",
+    "version": "npm run build && git add -A dist/ docs/ src/info.js esdoc.json",
     "postversion": "git push origin && git push --tags",
     "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version major",
     "release:minor": "changelog -m && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version minor",
@@ -77,8 +77,8 @@
   "dependencies": {
     "babel-polyfill": "^6.9.1",
     "cookies-js": "^1.2.2",
-    "md5": "^2.1.0",
-    "promise-polyfill": "^5.0.0"
+    "http-francis": "^0.1.4",
+    "md5": "^2.1.0"
   },
   "browserify": {
     "transform": [

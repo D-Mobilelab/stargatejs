@@ -1,6 +1,6 @@
 var fileModule = require('./File');
 var Logger = require('./Logger');
-var jsonpRequest = require('./Http').jsonpRequest;
+var JSONPRequest = require('http-francis').JSONPRequest;
 var extend = require('./Utils').extend;
 var dequeryfy = require('./Utils').dequeryfy;
 
@@ -22,35 +22,35 @@ var baseDir,
     downloading = false;
 
 var emptyOfflineData = {
-        GaForGame: {},
-        GamifiveInfo: {},
-        queues: {}
-    };
+    GaForGame: {},
+    GamifiveInfo: {},
+    queues: {}
+};
 
 var ga_for_games_qs = {
-        print_json_response: 1
-    };
+    print_json_response: 1
+};
 
 var obj = {
-        'content_id': '', // to fill
-        'formats': 'html5applications',
-        'sort': '-born_date',
-        'category': 'b940b384ff0565b06dde433e05dc3c93',
-        'publisher': '',
-        'size': 6,
-        'offset': 0,
-        'label': '',
-        'label_slug': '',
-        'access_type': '',
-        'real_customer_id': 'xx_gameasy',
-        'lang': 'en',
-        'use_cs_id': '',
-        'white_label': 'xx_gameasy',
-        'main_domain': 'http://www2.gameasy.com/ww',
-        'fw': 'gameasy',
-        'vh': 'ww.gameasy.com',
-        'check_compatibility_header': 0
-    };
+    'content_id': '', // to fill
+    'formats': 'html5applications',
+    'sort': '-born_date',
+    'category': 'b940b384ff0565b06dde433e05dc3c93',
+    'publisher': '',
+    'size': 6,
+    'offset': 0,
+    'label': '',
+    'label_slug': '',
+    'access_type': '',
+    'real_customer_id': 'xx_gameasy',
+    'lang': 'en',
+    'use_cs_id': '',
+    'white_label': 'xx_gameasy',
+    'main_domain': 'http://www2.gameasy.com/ww',
+    'fw': 'gameasy',
+    'vh': 'ww.gameasy.com',
+    'check_compatibility_header': 0
+};
 
 var LOG = new Logger('ALL', '[Game - module]', { background: 'black', color: '#5aa73a' });
 
@@ -94,19 +94,19 @@ function Game(){}
      * */
 Game.prototype.initialize = function(customConf){
          
-        if (customConf){
+    if (customConf){
             CONF = extend(CONF, customConf);
         }
-         LOG.d('Initialized called with:', CONF);        
+    LOG.d('Initialized called with:', CONF);        
 
-         try {
-            baseDir = window.cordova.file.applicationStorageDirectory;
-            cacheDir = window.cordova.file.cacheDirectory;
-            tempDirectory = window.cordova.file.tempDirectory;
-            wwwDir = window.cordova.file.applicationDirectory + 'www/';
-            stargatejsDir = window.cordova.file.applicationDirectory + 'www/js/stargate.js';
-            dataDir = window.cordova.file.dataDirectory;
-        } catch (reason){
+    try {
+             baseDir = window.cordova.file.applicationStorageDirectory;
+             cacheDir = window.cordova.file.cacheDirectory;
+             tempDirectory = window.cordova.file.tempDirectory;
+             wwwDir = window.cordova.file.applicationDirectory + 'www/';
+             stargatejsDir = window.cordova.file.applicationDirectory + 'www/js/stargate.js';
+             dataDir = window.cordova.file.dataDirectory;
+         } catch (reason){
             LOG.e(reason);
             return Promise.reject(reason);
         }
@@ -116,36 +116,36 @@ Game.prototype.initialize = function(customConf){
          * Putting games under Documents r/w. ApplicationStorage is read only
          * on android ApplicationStorage is r/w
          */
-         if (window.device.platform.toLowerCase() == 'ios'){ baseDir += 'Documents/'; }
-         if (window.device.platform.toLowerCase() == 'android'){ tempDirectory = cacheDir; }
+    if (window.device.platform.toLowerCase() == 'ios'){ baseDir += 'Documents/'; }
+    if (window.device.platform.toLowerCase() == 'android'){ tempDirectory = cacheDir; }
 
-         constants.SDK_DIR = baseDir + 'scripts/';
-         constants.SDK_RELATIVE_DIR = '../../scripts/';
-         constants.GAMEOVER_RELATIVE_DIR = '../../gameover_template/';        
-         constants.GAMES_DIR = baseDir + 'games/';
-         constants.BASE_DIR = baseDir;
-         constants.CACHE_DIR = cacheDir;
-         constants.TEMP_DIR = tempDirectory;
-         constants.CORDOVAJS = wwwDir + 'cordova.js';
-         constants.CORDOVA_PLUGINS_JS = wwwDir + 'cordova_plugins.js';
-         constants.STARGATEJS = wwwDir + 'js/stargate.js';
-         constants.DATA_DIR = dataDir;
-         constants.GAMEOVER_DIR = constants.BASE_DIR + 'gameover_template/';
-         constants.WWW_DIR = wwwDir;
+    constants.SDK_DIR = baseDir + 'scripts/';
+    constants.SDK_RELATIVE_DIR = '../../scripts/';
+    constants.GAMEOVER_RELATIVE_DIR = '../../gameover_template/';        
+    constants.GAMES_DIR = baseDir + 'games/';
+    constants.BASE_DIR = baseDir;
+    constants.CACHE_DIR = cacheDir;
+    constants.TEMP_DIR = tempDirectory;
+    constants.CORDOVAJS = wwwDir + 'cordova.js';
+    constants.CORDOVA_PLUGINS_JS = wwwDir + 'cordova_plugins.js';
+    constants.STARGATEJS = wwwDir + 'js/stargate.js';
+    constants.DATA_DIR = dataDir;
+    constants.GAMEOVER_DIR = constants.BASE_DIR + 'gameover_template/';
+    constants.WWW_DIR = wwwDir;
 
-         LOG.i('cordova JS dir to include', constants.CORDOVAJS);
+    LOG.i('cordova JS dir to include', constants.CORDOVAJS);
 
         /** expose */
-         this.BASE_DIR = constants.BASE_DIR;
-         this.OFFLINE_INDEX = constants.WWW_DIR + 'index.html';
+    this.BASE_DIR = constants.BASE_DIR;
+    this.OFFLINE_INDEX = constants.WWW_DIR + 'index.html';
 
 
         /**
          * Create directories
          * */
-         var gamesDirTask = fileModule.createDir(constants.BASE_DIR, 'games');
-         var scriptsDirTask = fileModule.createDir(constants.BASE_DIR, 'scripts');
-         var createOfflineDataTask = fileModule.fileExists(constants.BASE_DIR + 'offlineData.json')
+    var gamesDirTask = fileModule.createDir(constants.BASE_DIR, 'games');
+    var scriptsDirTask = fileModule.createDir(constants.BASE_DIR, 'scripts');
+    var createOfflineDataTask = fileModule.fileExists(constants.BASE_DIR + 'offlineData.json')
             .then(function(exists){
                 if (!exists){
                     LOG.i('creating offlineData.json');
@@ -154,24 +154,24 @@ Game.prototype.initialize = function(customConf){
                             LOG.d('offlineData', entry);
                             return fileModule.write(entry.path, JSON.stringify(emptyOfflineData));
                         });
-                }else {
+                } else {
                     LOG.i('offlineData.json already exists');
                     return exists;
                 }
             });
 
-         return Promise.all([
-            gamesDirTask,
-            scriptsDirTask,
-            createOfflineDataTask
-        ]).then(function(results){
+    return Promise.all([
+             gamesDirTask,
+             scriptsDirTask,
+             createOfflineDataTask
+         ]).then(function(results){
             LOG.d('GamesDir, ScriptsDir, offlineData.json created', results);
             return copyAssets();
         }).then(getSDK);
-     };
+};
 
 function copyAssets(){
-        return Promise.all([
+    return Promise.all([
             fileModule.dirExists(constants.BASE_DIR + 'gameover_template'),
             fileModule.dirExists(constants.SDK_DIR + 'plugins'),
             fileModule.fileExists(constants.SDK_DIR + 'cordova.js'),
@@ -205,7 +205,7 @@ function copyAssets(){
             }
             return Promise.all(all);
         });
-    }
+}
 
     /* function getRemoteMetadata(url){
         return new Promise(function(resolve, reject){            
@@ -220,11 +220,11 @@ function copyAssets(){
     }*/
 
 function getSDK(){
-        var now = new Date();
-        var sdkURLFresh = queryfy(CONF.sdk_url, { 'v': now.getTime() });
-        var dixieURLFresh = queryfy(CONF.dixie_url, { 'v': now.getTime(), 'country': 'xx-gameasy' });
+    var now = new Date();
+    var sdkURLFresh = queryfy(CONF.sdk_url, { 'v': now.getTime() });
+    var dixieURLFresh = queryfy(CONF.dixie_url, { 'v': now.getTime(), 'country': 'xx-gameasy' });
 
-        return Promise.all([
+    return Promise.all([
             fileModule.fileExists(constants.SDK_DIR + 'dixie.js'),
             fileModule.fileExists(constants.SDK_DIR + 'gfsdk.min.js')
         ]).then(function(results){
@@ -269,7 +269,7 @@ function getSDK(){
             }
             return Promise.all(tasks);
         });
-    }
+}
 
     /**
      * download the game and unzip it
@@ -283,32 +283,32 @@ function getSDK(){
      * */
 Game.prototype.download = function(gameObject, callbacks){
         // Clone object for security
-        var self = this;
-        gameObject = JSON.parse(JSON.stringify(gameObject));
-        var err;
-        if (this.isDownloading()){
+    var self = this;
+    gameObject = JSON.parse(JSON.stringify(gameObject));
+    var err;
+    if (this.isDownloading()){
             err = { type: 'error', description: 'AlreadyDownloading' };
             callbacks.onEnd(err);
             return Promise.reject(err); 
         }
         
-        if ((!gameObject.hasOwnProperty('response_api_dld')) || gameObject.response_api_dld.status !== 200){
+    if ((!gameObject.hasOwnProperty('response_api_dld')) || gameObject.response_api_dld.status !== 200){
             err = { type: 'error', description: 'response_api_dld.status not equal 200 or undefined' };
             callbacks.onEnd(err);
             return Promise.reject(err);
         }
 
-        var alreadyExists = this.isGameDownloaded(gameObject.id);
+    var alreadyExists = this.isGameDownloaded(gameObject.id);
         // Defaults
-        callbacks = callbacks ? callbacks : {};
-        var _onProgress = callbacks.onProgress ? callbacks.onProgress : function(){};
-        var _onStart = callbacks.onStart ? callbacks.onStart : function(){};
-        var _onEnd = callbacks.onEnd ? callbacks.onEnd : function(){};
+    callbacks = callbacks ? callbacks : {};
+    var _onProgress = callbacks.onProgress ? callbacks.onProgress : function(){};
+    var _onStart = callbacks.onStart ? callbacks.onStart : function(){};
+    var _onEnd = callbacks.onEnd ? callbacks.onEnd : function(){};
 
         /**
          * Decorate progress function with percentage and type operation
          */
-        function wrapProgress(type){
+    function wrapProgress(type){
             return function(progressEvent){
                 // LOG.d(progressEvent);
                 var percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
@@ -316,14 +316,14 @@ Game.prototype.download = function(gameObject, callbacks){
             };
         }       
         
-        var currentSize = gameObject.size.replace('KB', '').replace('MB', '').replace(',', '.').trim();
-        var conversion = { KB: 1, MB: 2, GB: 3, TB: 5 };
+    var currentSize = gameObject.size.replace('KB', '').replace('MB', '').replace(',', '.').trim();
+    var conversion = { KB: 1, MB: 2, GB: 3, TB: 5 };
         // var isKB = gameObject.size.indexOf("KB") > -1 ? true : false;
-        var isMB = gameObject.size.indexOf('MB') > -1 ? true : false;
-        var bytes = currentSize * Math.pow(1024, isMB ? conversion.MB : conversion.KB);
+    var isMB = gameObject.size.indexOf('MB') > -1 ? true : false;
+    var bytes = currentSize * Math.pow(1024, isMB ? conversion.MB : conversion.KB);
         
-        var saveAsName = gameObject.id;
-        function start(){
+    var saveAsName = gameObject.id;
+    function start(){
             _onStart({ type: 'download' });
             var spaceEnough = fileModule.requestFileSystem(1, bytes);
             LOG.d('Get ga_for_game and gamifive info, fly my minipony!');
@@ -442,18 +442,18 @@ Game.prototype.download = function(gameObject, callbacks){
                 });
         }
 
-        return alreadyExists.then(function(exists){
+    return alreadyExists.then(function(exists){
             LOG.d('Exists', exists);
             if (exists){
                 downloading = false;
                 return Promise.reject({ 12: 'AlreadyExists', gameID: gameObject.id });
-            }else {
+            } else {
                 downloading = true;
                 return start();
             }
         });
 
-    };
+};
     
     /**
      * play
@@ -462,14 +462,14 @@ Game.prototype.download = function(gameObject, callbacks){
      * @returns {Promise}
      * */
 Game.prototype.play = function(gameID){
-        LOG.d('Play', gameID);
+    LOG.d('Play', gameID);
         /*
          * TODO: check if games built with Construct2 has orientation issue
          * attach this to orientationchange in the game index.html
          * if(cr._sizeCanvas) window.cr_sizeCanvas(window.innerWidth, window.innerHeight)
          */
-        var gamedir = constants.GAMES_DIR + gameID;
-        return fileModule.readDir(gamedir)
+    var gamedir = constants.GAMES_DIR + gameID;
+    return fileModule.readDir(gamedir)
             .then(function(entries){
 
                 // Search for an /index.html$/
@@ -483,13 +483,13 @@ Game.prototype.play = function(gameID){
                 if (window.device.platform.toLowerCase() == 'ios'){
                     LOG.d('Play ios', address);
                     window.location.href = address;
-                }else {
+                } else {
                     LOG.d('Play android', address);
                     // window.location.href = entry[0].path;
                     window.navigator.app.loadUrl(encodeURI(address));
                 }
             });
-    };
+};
 
     /**
      * Returns an Array of entries that match /index\.html$/i should be only one in the game directory
@@ -498,15 +498,15 @@ Game.prototype.play = function(gameID){
      * @returns {Promise<Array|FileError>}
      * */
 function _getIndexHtmlById(gameID){
-        LOG.d('_getIndexHtmlById', constants.GAMES_DIR + gameID);
-        return fileModule.readDir(constants.GAMES_DIR + gameID)
+    LOG.d('_getIndexHtmlById', constants.GAMES_DIR + gameID);
+    return fileModule.readDir(constants.GAMES_DIR + gameID)
             .then(function(entries){
                 LOG.d('_getIndexHtmlById readDir', entries);
                 return entries.filter(function(entry){                    
                     return isIndexHtml(entry.path);
                 });
             });            
-    }
+}
 
     /**
      * removeRemoteSDK from game's dom
@@ -516,10 +516,10 @@ function _getIndexHtmlById(gameID){
      * @returns {Document} the cleaned document element
      * */
 function _removeRemoteSDK(dom){
-        LOG.d('_removeRemoteSDK');
-        var scripts = dom.querySelectorAll('script');
-        var scriptTagSdk;
-        for (var i = 0; i < scripts.length; i++){
+    LOG.d('_removeRemoteSDK');
+    var scripts = dom.querySelectorAll('script');
+    var scriptTagSdk;
+    for (var i = 0; i < scripts.length; i++){
             if (scripts[i].src.indexOf('gfsdk') !== -1){
                 scriptTagSdk = scripts[i];
                 LOG.d('_removeRemoteSDK', scriptTagSdk);
@@ -527,8 +527,8 @@ function _removeRemoteSDK(dom){
                 break;
             }
         }
-        return dom;
-    }
+    return dom;
+}
 
     /**
      * _injectScriptsInDom
@@ -538,15 +538,15 @@ function _removeRemoteSDK(dom){
      * @param {Array|String} sources - the src tag string or array of strings
      * */
 function _injectScriptsInDom(dom, sources){
-        dom = _removeRemoteSDK(dom);
-        var _sources = Array.isArray(sources) === false ? [sources] : sources;
-        var temp, css;
-        LOG.d('injectScripts', _sources);
+    dom = _removeRemoteSDK(dom);
+    var _sources = Array.isArray(sources) === false ? [sources] : sources;
+    var temp, css;
+    LOG.d('injectScripts', _sources);
         // Allow scripts to load from local cdvfile protocol
         // default-src * data: cdvfile://* content://* file:///*;
-        var metaTag = document.createElement('meta');
-        metaTag.httpEquiv = 'Content-Security-Policy';
-        metaTag.content = 'default-src * ' +
+    var metaTag = document.createElement('meta');
+    metaTag.httpEquiv = 'Content-Security-Policy';
+    metaTag.content = 'default-src * ' +
             'data: ' +
             'content: ' +
             'cdvfile: ' +
@@ -558,26 +558,26 @@ function _injectScriptsInDom(dom, sources){
             "'unsafe-inline' " +
             "'unsafe-eval';" +
             "style-src * cdvfile: http: https: 'unsafe-inline';";
-        dom.head.insertBefore(metaTag, dom.getElementsByTagName('meta')[0]);
+    dom.head.insertBefore(metaTag, dom.getElementsByTagName('meta')[0]);
 
         /**
          *  Create a script element __root__
          *  in case none script in head is present
          * */
-        var root = dom.createElement('script');
-        root.id = '__root__';
-        dom.head.insertBefore(root, dom.head.firstElementChild);
+    var root = dom.createElement('script');
+    root.id = '__root__';
+    dom.head.insertBefore(root, dom.head.firstElementChild);
 
-        var scriptFragment = dom.createDocumentFragment();
+    var scriptFragment = dom.createDocumentFragment();
 
-        for (var i = 0; i < _sources.length; i++){
+    for (var i = 0; i < _sources.length; i++){
             if (_sources[i].endsWith('.css')){
                 LOG.d('css inject:', _sources[i]);
                 css = dom.createElement('link');
                 css.rel = 'stylesheet';
                 css.href = _sources[i];
                 dom.head.insertBefore(css, dom.getElementsByTagName('link')[0]);
-            }else {
+            } else {
                 temp = dom.createElement('script');
                 temp.src = _sources[i];
                 scriptFragment.appendChild(temp);
@@ -585,19 +585,19 @@ function _injectScriptsInDom(dom, sources){
             }
         }
 
-        dom.head.insertBefore(scriptFragment, dom.head.getElementsByTagName('script')[0]);
-        LOG.d('Cleaned dom:', dom);
-        return dom;
-    }
+    dom.head.insertBefore(scriptFragment, dom.head.getElementsByTagName('script')[0]);
+    LOG.d('Cleaned dom:', dom);
+    return dom;
+}
 
 function removeOldGmenu(dom){
-        var toRemove = [];
-        toRemove.push(dom.querySelector("link[href='/gmenu/frame.css']"));
-        toRemove.push(dom.querySelector('iframe#menu'));
-        toRemove.push(dom.querySelector("script[src='/gmenu/toggle.js']"));
-        var scripts = dom.querySelectorAll('script');
+    var toRemove = [];
+    toRemove.push(dom.querySelector("link[href='/gmenu/frame.css']"));
+    toRemove.push(dom.querySelector('iframe#menu'));
+    toRemove.push(dom.querySelector("script[src='/gmenu/toggle.js']"));
+    var scripts = dom.querySelectorAll('script');
 
-        for (var i = scripts.length - 1; i >= 0; i--){
+    for (var i = scripts.length - 1; i >= 0; i--){
             if (scripts[i].innerHTML.indexOf('function open') !== -1){
                 toRemove.push(scripts[i]);
                 // scripts[i].parentNode.removeChild(scripts[i]);
@@ -605,14 +605,14 @@ function removeOldGmenu(dom){
             }
         }
 
-        for (var j = 0; j < toRemove.length; j++){
+    for (var j = 0; j < toRemove.length; j++){
             if (toRemove[j]){
                 toRemove[j].parentNode.removeChild(toRemove[j]);
             }
         }
 
-        return dom;
-    }
+    return dom;
+}
 
     /**
      * injectScripts in game index
@@ -623,8 +623,8 @@ function removeOldGmenu(dom){
      * @returns {Promise<Object|FileError>}
      * */
 function injectScripts(gameID, sources){
-        var indexPath;
-        return _getIndexHtmlById(gameID)
+    var indexPath;
+    return _getIndexHtmlById(gameID)
             .then(function(entry){
                 indexPath = entry[0].path;
                 LOG.d('injectScripts', indexPath);
@@ -670,12 +670,12 @@ function injectScripts(gameID, sources){
                 LOG.d('Write dom:', indexPath, htmlAsString);
                 return fileModule.write(indexPath, htmlAsString);
             });
-    }
+}
 
 function isIndexHtml(theString){
-        var isIndex = new RegExp(/.*\.html?$/i);
-        return isIndex.test(theString);
-    }
+    var isIndex = new RegExp(/.*\.html?$/i);
+    return isIndex.test(theString);
+}
 
     /**
      * remove the game directory
@@ -685,10 +685,10 @@ function isIndexHtml(theString){
      * @returns {Promise<Array>}
      * */
 Game.prototype.remove = function(gameID){
-        LOG.d('Removing game', gameID);
-        var isCached = fileModule.dirExists(constants.CACHE_DIR + gameID + '.zip');
-        var isInGameDir = fileModule.dirExists(constants.GAMES_DIR + gameID);
-        return Promise.all([isCached, isInGameDir])
+    LOG.d('Removing game', gameID);
+    var isCached = fileModule.dirExists(constants.CACHE_DIR + gameID + '.zip');
+    var isInGameDir = fileModule.dirExists(constants.GAMES_DIR + gameID);
+    return Promise.all([isCached, isInGameDir])
             .then(function(results){
                 var finalResults = [];
                 if (results[0]){
@@ -706,7 +706,7 @@ Game.prototype.remove = function(gameID){
                 }
                 return finalResults;
             });
-    };
+};
 
     /**
      * isDownloading
@@ -715,8 +715,8 @@ Game.prototype.remove = function(gameID){
      * @returns {boolean}
      * */
 Game.prototype.isDownloading = function(){
-        return downloading;
-    };
+    return downloading;
+};
 
     /**
      * abortDownload
@@ -725,7 +725,7 @@ Game.prototype.isDownloading = function(){
      * @returns {boolean}
      * */
 Game.prototype.abortDownload = function(){
-        if (this.isDownloading()){
+    if (this.isDownloading()){
             LOG.d('Abort last download');
             if (fileModule.currentFileTransfer){
                 fileModule.currentFileTransfer.abort();
@@ -735,9 +735,9 @@ Game.prototype.abortDownload = function(){
 
             return true;
         }
-        LOG.w("There's not a download operation to abort");
-        return false;
-    };
+    LOG.w("There's not a download operation to abort");
+    return false;
+};
 
     /**
      * list
@@ -746,8 +746,8 @@ Game.prototype.abortDownload = function(){
      * @returns {Promise<Array>} - Returns an array of metainfo gameObject
      * */
 Game.prototype.list = function(){
-        LOG.d('Get games list');
-        return fileModule.readDir(constants.GAMES_DIR)
+    LOG.d('Get games list');
+    return fileModule.readDir(constants.GAMES_DIR)
             .then(function(entries){
                 var _entries = Array.isArray(entries) ? entries : [entries];
                 return _entries.filter(function(entry){
@@ -765,7 +765,7 @@ Game.prototype.list = function(){
                     return results;
                 });
             });
-    };
+};
     
     /**
      * buildGameOver
@@ -778,17 +778,17 @@ Game.prototype.list = function(){
      * @returns {Promise<String>} - The promise will be filled with the gameover html {String}     
      */
 Game.prototype.buildGameOver = function(datas){                 
-        var metaJsonPath = constants.GAMES_DIR + datas.content_id + '/meta.json';
+    var metaJsonPath = constants.GAMES_DIR + datas.content_id + '/meta.json';
         /** Check if content_id is here */
-        if (!datas.hasOwnProperty('content_id')){ return Promise.reject('Missing content_id key!'); }
+    if (!datas.hasOwnProperty('content_id')){ return Promise.reject('Missing content_id key!'); }
         
-        LOG.d('Read meta.json:', metaJsonPath);
-        LOG.d('GAMEOVER_TEMPLATE path', constants.GAMEOVER_DIR + 'gameover.html');
+    LOG.d('Read meta.json:', metaJsonPath);
+    LOG.d('GAMEOVER_TEMPLATE path', constants.GAMEOVER_DIR + 'gameover.html');
         /** *
          * if needed
          * return new window.DOMParser().parseFromString(documentAsString, "text/xml").firstChild
          * **/
-        return Promise.all([
+    return Promise.all([
             fileModule.readFileAsJSON(metaJsonPath),
             fileModule.readFile(constants.GAMEOVER_DIR + 'gameover.html')
         ]).then(function(results){
@@ -803,7 +803,7 @@ Game.prototype.buildGameOver = function(datas){
                     .replace('{{url_cover}}', metaJson.images.cover.ratio_1);
                     // .replace("{{startpage_url}}", constants.WWW_DIR + "index.html");
         });
-    };
+};
 
 /**
  * isGameDownloaded
@@ -812,8 +812,8 @@ Game.prototype.buildGameOver = function(datas){
  * @returns {Promise}
  * */
 Game.prototype.isGameDownloaded = function(gameID){
-        return fileModule.dirExists(constants.GAMES_DIR + gameID);
-    };
+    return fileModule.dirExists(constants.GAMES_DIR + gameID);
+};
 
 /**
  * removeAll delete all games and recreate the games folder
@@ -821,12 +821,12 @@ Game.prototype.isGameDownloaded = function(gameID){
  * @returns {Promise}
  * */
 Game.prototype.removeAll = function(){
-        return fileModule.removeDir(constants.GAMES_DIR)
+    return fileModule.removeDir(constants.GAMES_DIR)
             .then(function(result){
                 LOG.d('All games deleted!', result);
                 return fileModule.createDir(constants.BASE_DIR, 'games');
             });
-    };
+};
 
     /**
      * downloadImage
@@ -853,7 +853,7 @@ function downloadImage(info){
         };*/
 
         // GET COVER IMAGE FOR THE GAME!
-        var toDld = info.url
+    var toDld = info.url
             .replace('[WSIZE]', info.size.width)
             .replace('[HSIZE]', info.size.height)
             .split('?')[0];
@@ -861,24 +861,24 @@ function downloadImage(info){
         // toDld = "http://lorempixel.com/g/"+info.size.width+"/"+info.size.height+"/";
         // toDld = encodeURI(toDld);
 
-        var gameFolder = constants.GAMES_DIR + info.gameId;
+    var gameFolder = constants.GAMES_DIR + info.gameId;
         // var imagesFolder = gameFolder + "/images/" + info.type + "/";
-        var imageName = info.type + '_' + info.size.width + 'x' + info.size.height + ('_' + info.size.ratio || '') + '.jpeg';
-        LOG.d('request Image to', toDld, 'coverImageUrl', imageName, 'imagesFolder', gameFolder);
-        if (info.method === 'xhr'){
+    var imageName = info.type + '_' + info.size.width + 'x' + info.size.height + ('_' + info.size.ratio || '') + '.jpeg';
+    LOG.d('request Image to', toDld, 'coverImageUrl', imageName, 'imagesFolder', gameFolder);
+    if (info.method === 'xhr'){
             return Promise.all([
                 fileModule.createFile(gameFolder, imageName),
                 Utils.getImageRaw({ url: toDld })
             ]).then(function(results){
-                    var entry = results[0];
-                    var blob = results[1];
+                var entry = results[0];
+                var blob = results[1];
 
-                    return fileModule.appendToFile(entry.path, blob, true, 'image/jpeg');
-                });
-        } else{
+                return fileModule.appendToFile(entry.path, blob, true, 'image/jpeg');
+            });
+        } else {
             return new fileModule.download(toDld, gameFolder, imageName, function(){}).promise;
         }
-    }
+}
 
     /**
      * getBundleObjects
@@ -889,8 +889,8 @@ function downloadImage(info){
      * @returns {Promise<Array>} the gameObject with response_api_dld key
      * */
 Game.prototype.getBundleGameObjects = function(){
-        var self = this;
-        if (CONF.bundle_games.length > 0){
+    var self = this;
+    if (CONF.bundle_games.length > 0){
             LOG.d('Games bundle in configuration', CONF.bundle_games);
             var whichGameAlreadyHere = CONF.bundle_games.map(function(gameId){
                 return self.isGameDownloaded(gameId);
@@ -916,12 +916,12 @@ Game.prototype.getBundleGameObjects = function(){
                     var api_string = queryfy(CONF.api, obj);
                     LOG.d('Request bundle games meta info:', api_string);
 
-                    return new jsonpRequest(api_string).prom;
+                    return new JSONPRequest(api_string).prom;
                 }).then(function(bundleGameObjects){
                     LOG.d('Games bundle response:', bundleGameObjects);
                     tmpBundleGameObjects = bundleGameObjects;
                     var jsonpRequests = bundleGameObjects.map(function(item){
-                        return new jsonpRequest(item.url_api_dld).prom;
+                        return new JSONPRequest(item.url_api_dld).prom;
                     });
                     LOG.d('jsonpRequests', jsonpRequests);
                     return Promise.all(jsonpRequests);
@@ -940,11 +940,11 @@ Game.prototype.getBundleGameObjects = function(){
                 .catch(function(reason){
                     LOG.e('Games bundle meta fail:', reason);
                 });
-        } else{
+        } else {
             LOG.w('Bundle_games array is empty!');
             return Promise.reject('bundle_games array is empty!');
         }
-    };
+};
 
     /**
      * needsUpdate
@@ -954,8 +954,8 @@ Game.prototype.getBundleGameObjects = function(){
      * @param {Promise<Boolean>}
      * */
 Game.prototype.needsUpdate = function(gameId){
-        var oldMd5 = '';
-        return fileModule.readFileAsJSON(constants.GAMES_DIR + gameId + '/meta.json')
+    var oldMd5 = '';
+    return fileModule.readFileAsJSON(constants.GAMES_DIR + gameId + '/meta.json')
             .then(function(gameObject){
                 oldMd5 = gameObject.response_api_dld.binary_md5;
                 return Utils.getJSON(gameObject.url_api_dld);
@@ -963,16 +963,16 @@ Game.prototype.needsUpdate = function(gameId){
             .then(function(response){
                 if (response.status === 200){
                     return response.binary_md5 !== oldMd5;
-                } else{
+                } else {
                     throw new Error('ResponseStatus ' + response.status);
                 }
             });
-    };
+};
 
 function readUserJson(){
-        LOG.i('readUserJson', constants.BASE_DIR + 'user.json');
-        return fileModule.readFileAsJSON(constants.BASE_DIR + 'user.json');
-    }
+    LOG.i('readUserJson', constants.BASE_DIR + 'user.json');
+    return fileModule.readFileAsJSON(constants.BASE_DIR + 'user.json');
+}
 
 function storeOfflineData(content_id){
         /**
@@ -984,12 +984,12 @@ function storeOfflineData(content_id){
          *  queues:{}
          * }
          * */
-        var apiGaForGames = queryfy(CONF.ga_for_game_url, ga_for_games_qs);
-        var getGaForGamesTask = new jsonpRequest(apiGaForGames).prom;
+    var apiGaForGames = queryfy(CONF.ga_for_game_url, ga_for_games_qs);
+    var getGaForGamesTask = new JSONPRequest(apiGaForGames).prom;
         
-        var tasks = Promise.all([getGaForGamesTask, readUserJson()]);
+    var tasks = Promise.all([getGaForGamesTask, readUserJson()]);
 
-        return tasks.then(function(results){
+    return tasks.then(function(results){
             var ga_for_game = results[0];
             var userJson = results[1];
 
@@ -1010,7 +1010,7 @@ function storeOfflineData(content_id){
             gamifive_api += userJson.ponyUrl;
 
             LOG.d('gamifive_info_api', gamifive_api);
-            return [new jsonpRequest(gamifive_api).prom, ga_for_game];
+            return [new JSONPRequest(gamifive_api).prom, ga_for_game];
 
         }).then(function(results){
             return results[0].then(function(gamifive_info){
@@ -1018,10 +1018,10 @@ function storeOfflineData(content_id){
                 return updateOfflineData({ content_id, ga_for_game: results[1], gamifive_info: gamifive_info.game_info });
             });
         });
-    }
+}
 
 function updateOfflineData(object){
-        return fileModule.readFileAsJSON(constants.BASE_DIR + 'offlineData.json')
+    return fileModule.readFileAsJSON(constants.BASE_DIR + 'offlineData.json')
             .then(function(offlineData){
                 offlineData.GaForGame[object.content_id] = object.ga_for_game;
                 offlineData.GamifiveInfo[object.content_id] = object.gamifive_info;
@@ -1031,5 +1031,5 @@ function updateOfflineData(object){
                 LOG.d('writing offlineData.json', offlineDataUpdated);
                 return fileModule.write(constants.BASE_DIR + 'offlineData.json', JSON.stringify(offlineDataUpdated));
             });
-    }
+}
 module.exports = Game;
