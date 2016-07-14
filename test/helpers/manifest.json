@@ -1,0 +1,59 @@
+{
+    "start_url": "index.html?hybrid=1",
+    "short_name": "Gameasy",
+    "mjs_api_access": [
+        { "match": "http://www.gameasy.com/*", "platform": "android, ios", "access": "cordova" },
+        { "match": "http://www2.gameasy.com/*", "platform": "android, ios", "access": "cordova" }
+    ],
+    "mjs_cordova": {
+        "plugin_mode": "client"
+    },
+
+    "comment": "FIXME list of allowed url",
+    "mjs_extended_scope": [
+        "*"
+    ],
+    "wat_navigation": {
+        "hideOnPageBackButton": true
+    },
+    "comment": "https://w3c.github.io/screen-orientation/#idl-def-OrientationLockType",
+    "orientation": "any",
+
+    "stargateConf": {
+        "title": "Gameasy",
+        "webapp_start_url": "http://www2.gameasy.com/",
+        "stargate_version_to_load": "4",
+
+        "billing_key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgsZXbOOwc3bES1iJkh3GVZJIYl9MQ8ycMQLG6a0jVwwFLY/Ntr+PS6YrrTSrLjX+SX35nPaALfy8buce3qh1cfcQO5g8ocwyjII1NBVavKjGwXcAJT9AjoD53uATvBfx6LZTjTKc/N4HoKHdNeSWkJIip9ZtP6NIDWcpnBjVZGX/cyDNnI9fF9z75kGQOWprzFeMR5+IyzDcAcEs6xp3e9x3i0U+LtBthatK4wpi3sRMxlUNAz7dE4nEPVdDEpy2VdI9n1FDFGw0X7amLVQ8aqKWj5z84ZoJaA1dSHnWlEkDzXSNJLzktLE5cPErBkTfYh2Ps+0WV2j3bDX4IMbHFwIDAQAB",
+        
+        "appstore_appid": "1088348049",
+        "appsflyer_devkey": "wr4oyoitcFGVerfzDk5Qf9",
+        
+        "features": {
+            "newton": false,
+            "facebookconnect": true,
+            "mfp": true,
+            "gesturePlaymeVertical": false,
+            "gplusconnect": false,
+            "androidMenuPlayme": false,
+            "inappPurchase": true,
+            "deltadna" : false,
+            "game":true,
+            "appsflyer": true,
+            "adv":true
+        },
+
+        "api": {
+            "mfpSetUriTemplate": "{protocol}://{hostname}/mfpset.php{?url,domain,_PONY}",
+            "mfpGetUriTemplate": "http://api.motime.com/v01/mobileFingerprint.get{?apikey,contents_inapp,country,expire}",
+            "googleToken": "https://accounts.google.com/o/oauth2/token",
+            "userCreate": "%domain%/%country%/%selector%/%app_prefix%/store/usercreate/"
+        },
+
+        "statusbar": {
+            "hideOnUrlPattern": [
+                ".*"
+            ]
+        }
+    }
+}

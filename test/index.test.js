@@ -3,9 +3,10 @@ var Stargate = require('../src/index');
 var simulateEvent = require('./helpers/SimulateEvent');
 var cordovaMock = require('./helpers/cordova');
 var fileMock = require('./helpers/cordova-plugin-file');
-var UnzipMock = require('./helpers/cordova-plugin-unzip').UnzipMock;
+var unzipMock = require('./helpers/cordova-plugin-unzip');
 var deviceMock = require('./helpers/cordova-plugin-device');
-
+var utils = require('./helpers/utilities');
+var manifestJSON = require('./helpers/manifest');
 // Used to replace-mock window in some cases   
 var ctx = {
     document: {
@@ -23,7 +24,7 @@ describe('Stargate public interface tests 1', () => {
     });
 
     afterAll(() => {
-        //jasmine.clock().uninstall();
+        // jasmine.clock().uninstall();
     });
 
     beforeEach(() => {
@@ -56,18 +57,21 @@ describe('Stargate public interface tests 1', () => {
 
 describe('Stargate public interface tests 2', () => {
 
-    beforeEach(() => {
-       cordovaMock.install(3);
-       fileMock.install();
-       deviceMock.install();
+    beforeEach((done) => {
+        cordovaMock.install(3);
+        fileMock.install().then(done);
+        deviceMock.install();
+        unzipMock.install();
     });
 
-    afterEach(() => {
+    afterEach((done) => {
+        unzipMock.uninstall();
         deviceMock.uninstall();
         fileMock.uninstall();
-        cordovaMock.uninstall();                
+        cordovaMock.uninstall();                       
 
         Stargate.__deinit__();
+        done();
     });
 
     it('Test public method interface', () => {
@@ -88,12 +92,31 @@ describe('Stargate public interface tests 2', () => {
     });
 
     it('Initialize hybrid should wait deviceready', (done) => {
-        localStorage.setItem('hybrid', 1);
+        expect(window.cordova.file).toBeDefined();
         
-        Stargate.initialize().then((results) => {
-            console.log('Results:', results);
-            expect(results).toBeDefined();            
-            done(); 
-        });        
+        // Create directory and manifest.json
+        utils.createDir(window.cordova.file.applicationStorageDirectory, 'www')
+        .then((dirEntry) => 
+            utils.createFileWithContent(dirEntry.toURL(), 
+                            'manifest.json', 
+                            JSON.stringify(manifestJSON))
+        )
+        .then((results) => {
+            console.log('Manifest:', results);
+            localStorage.setItem('hybrid', 1);
+            
+            Stargate.initialize().then((results) => {                
+                expect(results).toBeDefined();
+                utils.removeFile(window.cordova.file.applicationStorageDirectory + 'www/manifest.json');
+                expect(Stargate.getWebappStartUrl()).toEqual('http://www2.gameasy.com/?hybrid=1&stargateVersion=4');
+                expect(Stargate.getWebappOrigin()).toEqual('http://www2.gameasy.com');          
+                done(); 
+            }).catch((reason) => {
+                console.error(reason);
+                utils.removeFile(window.cordova.file.applicationStorageDirectory + 'www/manifest.json');
+                done();                    
+            });
+        });       
+        
     });
 });

@@ -3,45 +3,8 @@ var fileMock = require('./helpers/cordova-plugin-file');
 var unzipMock = require('./helpers/cordova-plugin-unzip');
 var deviceMock = require('./helpers/cordova-plugin-device');
 var File = require('../src/modules/File');
-
+var utils = require('./helpers/utilities');
 describe('File interface test', () => {
-
-    // UTILITIES FUNCTION
-    function createFile(folder, name){
-        return new Promise(function(resolve, reject){
-            window.resolveLocalFileSystemURL(folder,
-                function(dirEntry){
-                    dirEntry.getFile(name, { create: true }, resolve);
-                }, reject
-            );
-        });
-    }
-    
-    function createFileWithContent(folder, name, content){
-        return createFile(folder, name).then(function(fileEntry){
-            return new Promise(function(resolve, reject){
-                fileEntry.createWriter(function(fw){
-                        fw.seek(fw.length);
-                        var blob = new Blob([content], { type: 'text/plain' });
-                        fw.write(blob);
-                        fw.onwriteend = function(){
-                            resolve(fileEntry);
-                        };
-                });
-            });
-        });
-    }
-
-    function removeFile(filepath){
-        return new Promise((resolve, reject) => {
-            window.resolveLocalFileSystemURL(filepath,
-                (fileEntry) => {
-                    fileEntry.remove((result) => {
-                        resolve(result === null || result === 'OK');
-                    });
-                }, reject);
-        });            
-    }
 
     var TEST_FOLDER_DIR = '';
     beforeAll((done) => {
@@ -120,28 +83,28 @@ describe('File interface test', () => {
     });
 
     it('readFile() should read', (done) => {
-        createFileWithContent(TEST_FOLDER_DIR, 'simplefile.txt', 'content')
+        utils.createFileWithContent(TEST_FOLDER_DIR, 'simplefile.txt', 'content')
                 .then(() => {
                     return File.readFile(TEST_FOLDER_DIR + 'simplefile.txt');
                 })
                 .then((content) => {                    
                     expect(content).toEqual('content');
-                    removeFile(TEST_FOLDER_DIR + 'simplefile.txt').then(done);
+                    utils.removeFile(TEST_FOLDER_DIR + 'simplefile.txt').then(done);
                 })
                 .catch((reason) => {
-                    removeFile(TEST_FOLDER_DIR + 'simplefile.txt').then(done);                    
+                    utils.removeFile(TEST_FOLDER_DIR + 'simplefile.txt').then(done);                    
                 });
     });
     
     it('readFileAsJSON() should read a json', (done) => {
-        createFileWithContent(TEST_FOLDER_DIR, 'simplefile.json', JSON.stringify({ aa: 'bb' }))
+        utils.createFileWithContent(TEST_FOLDER_DIR, 'simplefile.json', JSON.stringify({ aa: 'bb' }))
                 .then(() => File.readFileAsJSON(TEST_FOLDER_DIR + 'simplefile.json'))
                 .then((content) => {                    
                     expect(content).toEqual({ aa: 'bb' });
-                    removeFile(TEST_FOLDER_DIR + 'simplefile.json').then(done);
+                    utils.removeFile(TEST_FOLDER_DIR + 'simplefile.json').then(done);
                 })
                 .catch((reason) => {
-                    removeFile(TEST_FOLDER_DIR + 'simplefile.json').then(done);                    
+                    utils.removeFile(TEST_FOLDER_DIR + 'simplefile.json').then(done);                    
                 });
     });
 });
