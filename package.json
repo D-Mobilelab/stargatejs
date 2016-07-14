@@ -10,7 +10,8 @@
   "scripts": {
     "clean:docs": "rimraf docs && mkdir docs",
     "clean:dist": "rimraf dist && mkdir dist",
-    "clean": "npm run clean:docs & npm run clean:dist",
+    "clean:coverage": "rimraf coverage && mkdir coverage",
+    "clean": "npm run clean:docs & npm run clean:dist & npm run clean:coverage",
     "lint": "eslint src test",
     "prebuild": "npm run clean && sh .getrevision.sh",
     "build": "babel src --out-dir src5 && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
@@ -45,6 +46,7 @@
     "eslint-plugin-jsx-a11y": "^1.5.3",
     "eslint-plugin-react": "^5.2.2",
     "generate-changelog": "^1.0.2",
+    "isparta": "^4.0.0",
     "istanbul": "^0.4.3",
     "istanbul-instrumenter-loader": "^0.2.0",
     "jasmine-ajax": "^3.2.0",
