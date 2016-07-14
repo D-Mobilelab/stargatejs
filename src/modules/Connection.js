@@ -35,7 +35,7 @@ function updateConnectionStatus(theEvent){
 function bindConnectionEvents(){
     if (UNSUPPORTED){
         // For some reasons document.addEventListener 
-        // does not work in browsers (Safari, Chrome only works with window, FF both)
+        // does not work in browsers (Safari, Chrome works only with window, FF both)
         // on cordova you MUST use document.addEventListener       
         window.addEventListener('offline', updateConnectionStatus, false);
         window.addEventListener('online', updateConnectionStatus, false);        

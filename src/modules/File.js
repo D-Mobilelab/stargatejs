@@ -428,7 +428,7 @@ File.getMetadata = function(path){
  * @returns {Array.<Object>} - an array of Object
  * */
 function __transform(entries){
-    var arr = entries.map(function(entry){
+    var arr = entries.map((entry) => {
         return {
             fullPath: entry.fullPath,
             path: entry.toURL(),
