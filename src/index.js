@@ -342,9 +342,9 @@ module.exports = {
     isInitialized,
     isHybrid,
     isOpen,
-    getWebappStartUrl,
-    getWebappOrigin,
-    goToLocalIndex,
-    goToWebIndex,
+    getWebappStartUrl: requireCondition(isInitialized, getWebappStartUrl, null, MESSAGE_INITIALIZED, 'warn'),
+    getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn'),
+    goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn'),
+    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn'),
     __deinit__
 };
