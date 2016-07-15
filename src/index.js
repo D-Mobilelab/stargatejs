@@ -211,6 +211,7 @@ function removeListener(type, fn){
 
 /**
  * get Manifest in the hybrid app
+ * 
  * @returns {promise} - in success case fullfilled with Object
  */
 function getManifest() {
@@ -251,6 +252,7 @@ function getWebappStartUrl(){
 /**
  * getWebappOrigin
  * return the online service domain string or empty string before initialization
+ * 
  * @returns {string}
  */
 function getWebappOrigin() {
@@ -263,6 +265,11 @@ function getWebappOrigin() {
 }
 
 
+/**
+ * loadUrl
+ * 
+ * @param {string} url - an http url to load in the webview
+ */
 function loadUrl(url){
 
     if (window.device.platform.toLowerCase() === 'android'){
@@ -304,7 +311,7 @@ function goToWebIndex(){
 }
 
 /**
- * just for test
+ * just for testing purpose deinitialize stargate
  */
 function __deinit__(){
     initPromise = null; 
