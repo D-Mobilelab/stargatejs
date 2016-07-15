@@ -1,5 +1,5 @@
 {
-  "name": "stargate",
+  "name": "stargate-js",
   "version": "0.1.2",
   "description": "",
   "main": "src5/index.js",
@@ -15,8 +15,7 @@
     "lint": "eslint src test",
     "prebuild": "npm run clean && sh .getrevision.sh && git add src/info.js",
     "build": "babel src --out-dir src5 && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
-    "minify": "uglifyjs dist/stargate.js --compress --source-map dist/stargate.js.map --output dist/stargate.min.js",
-    "prepublish": "npm run build",
+    "minify": "uglifyjs dist/stargate.js --compress --source-map dist/stargate.js.map --output dist/stargate.min.js",    
     "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
     "test": "npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
