@@ -21,11 +21,8 @@
     "test": "npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
-    "version": "npm run build && git add -A dist/",
-    "postversion": "git push origin && git push --tags",
-    "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version major",
-    "release:minor": "changelog -m && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version minor",
-    "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version patch"
+    "version": "npm run build && npm run gendocs && git add -A dist/ docs/",
+    "postversion": "git push origin && git push --tags"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
@@ -43,8 +40,7 @@
     "eslint-config-airbnb": "^9.0.1",
     "eslint-plugin-import": "^1.9.2",
     "eslint-plugin-jsx-a11y": "^1.5.3",
-    "eslint-plugin-react": "^5.2.2",
-    "generate-changelog": "^1.0.2",
+    "eslint-plugin-react": "^5.2.2",    
     "isparta": "^4.0.0",
     "istanbul": "^0.4.3",
     "istanbul-instrumenter-loader": "^0.2.0",
