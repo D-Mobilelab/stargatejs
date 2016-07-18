@@ -1,7 +1,7 @@
 {
-  "name": "stargate-js",
+  "name": "stargatejs",
   "version": "0.1.3",
-  "description": "",
+  "description": "stargate library for hybrid apps",
   "main": "src5/index.js",
   "repository": {
     "type": "git",
