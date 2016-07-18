@@ -1,1 +1,1 @@
-var pkgInfo = {"version":"0.1.3", "build":"v0.1.1-31-g04ce8bd"};module.exports = pkgInfo;
+var pkgInfo = {"version":"0.1.4", "build":"v0.1.1-34-gce23939"};module.exports = pkgInfo;

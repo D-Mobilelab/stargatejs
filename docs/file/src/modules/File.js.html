@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/modules/File.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/D-Mobilelab/stargate.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/modules/File.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">var Logger = require(&apos;./Logger&apos;);
+var requireCondition = require(&apos;./Decorators&apos;).requireCondition;
+/**
+ * File module
+ * @module src/modules/File
+ * @type {Object}
+ * @see https://github.com/apache/cordova-plugin-file
+ * @requires ./Utils.js
+ */
+var File = {};
+
+File.LOG = new Logger(&apos;ALL&apos;, &apos;[File - module]&apos;);
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+
+/**
+ * ERROR_MAP
+ * Stargate.file.ERROR_MAP
+ * */
+File.ERROR_MAP = {
+    1: &apos;NOT_FOUND_ERR&apos;,
+    2: &apos;SECURITY_ERR&apos;,
+    3: &apos;ABORT_ERR&apos;,
+    4: &apos;NOT_READABLE_ERR&apos;,
+    5: &apos;ENCODING_ERR&apos;,
+    6: &apos;NO_MODIFICATION_ALLOWED_ERR&apos;,
+    7: &apos;INVALID_STATE_ERR&apos;,
+    8: &apos;SYNTAX_ERR&apos;,
+    9: &apos;INVALID_MODIFICATION_ERR&apos;,
+    10: &apos;QUOTA_EXCEEDED_ERR&apos;,
+    11: &apos;TYPE_MISMATCH_ERR&apos;,
+    12: &apos;PATH_EXISTS_ERR&apos;
+};
+
+File.currentFileTransfer = null;
+
+/**
+ * File.resolveFS
+ *
+ * @param {String} url - the path to load see cordova.file.*
+ * @returns {Promise&lt;Entry|FileError&gt;}
+ * */
+File.resolveFS = function(url){
+    return new Promise(function(resolve, reject){
+        window.resolveLocalFileSystemURL(url, resolve, reject);
+    });
+};
+
+/**
+ * File.appendToFile
+ *
+ * @param {String} filePath - the filepath file:// url like
+ * @param {String|Blob} data - the string to write into the file
+ * @param {String} [overwrite=false] - overwrite
+ * @param {String} mimeType: text/plain | image/jpeg | image/png
+ * @returns {Promise&lt;String|FileError&gt;} where string is a filepath
+ */
+File.appendToFile = function(filePath, data, overwrite, mimeType){
+    // Default
+    overwrite = arguments[2] === undefined ? false : arguments[2];
+    mimeType = arguments[3] === undefined ? &apos;text/plain&apos; : arguments[3];
+    
+    return File.resolveFS(filePath)
+        .then(function(fileEntry){
+            return new Promise(function(resolve, reject){
+                fileEntry.createWriter(function(fileWriter) {
+                    if (!overwrite){
+                        fileWriter.seek(fileWriter.length);
+                    }
+
+                    var blob;
+                    if (!(data instanceof Blob)){
+                        blob = new Blob([data], { type: mimeType });
+                    } else {
+                        blob = data;
+                    }
+
+                    fileWriter.write(blob);
+                    fileWriter.onerror = reject;
+                    fileWriter.onabort = reject;
+                    fileWriter.onwriteend = function(){
+                        resolve(__transform([fileEntry]));
+                    };
+                }, reject);
+            });
+
+        });
+};
+
+/**
+ * File.readFileAsHTML
+ * @param {String} indexPath - the path to the file to read
+ * @returns {Promise&lt;Document|FileError&gt;}
+ */
+File.readFileAsHTML = function(indexPath){
+
+    return File.readFile(indexPath)
+        .then(function(documentAsString){
+            return new window.DOMParser().parseFromString(documentAsString, &apos;text/html&apos;);
+        });
+};
+
+/**
+ * File.readFileAsJSON
+ * @param {String} indexPath - the path to the file to read
+ * @returns {Promise&lt;Object|FileError&gt;}
+ */
+File.readFileAsJSON = function(indexPath){
+    return File.readFile(indexPath)
+        .then(function(documentAsString){
+            try {
+                return Promise.resolve(window.JSON.parse(documentAsString));
+            } catch(e){
+                return Promise.reject(e);
+            }
+        });
+};
+
+/**
+ *  File.removeFile
+ *
+ *  @param {String} filePath - file://
+ *  @returns {Promise&lt;String|FileError&gt;}
+ * */
+File.removeFile = function(filePath){
+    return File.resolveFS(filePath)
+        .then(function(fileEntry){
+            return new Promise(function(resolve, reject){
+                fileEntry.remove(function(result){
+                    resolve(result === null || result === &apos;OK&apos;);
+                }, reject);
+            });
+        });
+};
+
+/**
+ *  File.removeDir
+ *
+ *  @param {String} dirpath - the directory entry to remove recursively
+ *  @returns Promise&lt;void|FileError&gt;
+ * */
+File.removeDir = function(dirpath){
+    return File.resolveFS(dirpath)
+        .then(function(dirEntry){
+            return new Promise(function(resolve, reject){
+                dirEntry.removeRecursively(function(result){
+                    resolve(result === null || result === &apos;OK&apos;);
+                }, reject);
+            });
+        });
+};
+
+/**
+ *  File._promiseZip
+ *
+ *  @private
+ *  @param {String} zipPath - the file to unpack
+ *  @param {String} outFolder - the folder where to unpack
+ *  @param {Function} _onProgress - the callback called with the percentage of unzip progress
+ *  @returns Promise&lt;boolean&gt;
+ * */
+File._promiseZip = function(zipPath, outFolder, _onProgress){
+
+    LOG.d(&apos;PROMISEZIP:&apos;, arguments);
+    return new Promise(function(resolve, reject){
+        window.zip.unzip(zipPath, outFolder, function(result){
+            if (result === 0){
+                resolve(true);
+            } else {
+                reject(result);
+            }
+        }, _onProgress);
+    });
+};
+
+/**
+ * File.download
+ *
+ * @param {String} url - the URL of the resource to download
+ * @param {String} filepath - a directory entry type object where to save the file
+ * @param {String} saveAsName - the name with the resource will be saved
+ * @param {Function} _onProgress - a progress callback function filled with the percentage from 0 to 100
+ * @returns {Promise}
+ * */
+File.download = function(url, filepath, saveAsName, _onProgress){
+    var self = this;
+    this.ft = new window.FileTransfer();
+    this.ft.onprogress = _onProgress;
+    File.currentFileTransfer = self.ft;
+
+    self.promise = new Promise(function(resolve, reject){
+        self.ft.download(window.encodeURI(url), filepath + saveAsName,
+            function(entry){
+                resolve(__transform([entry]));
+                self.ft = null;
+            },
+            function(reason){
+                reject(reason);
+                self.ft = null;
+            },
+            true // trustAllHosts
+        );
+    });
+};
+
+/**
+ * File.createDir
+ *
+ * @param {String} dirPath - a file:// like path
+ * @param {String} subFolderName
+ * @returns {Promise&lt;String|FileError&gt;} - return the filepath created
+ * */
+File.createDir = function(dirPath, subFolderName){
+    return File.resolveFS(dirPath)
+        .then(function(dirEntry){
+            return new Promise(function(resolve, reject){
+                dirEntry.getDirectory(subFolderName, { create: true }, function(entry){
+                    resolve(__transform([entry]));
+                }, reject);
+            });
+        });
+};
+
+/**
+ *  File.fileExists
+ *
+ *  @param {String} url - the toURL path to check
+ *  @returns {Promise&lt;boolean|void&gt;}
+ * */
+File.fileExists = function(url){
+    return new Promise(function(resolve){
+        window.resolveLocalFileSystemURL(url, function(entry){
+
+            resolve(entry.isFile);
+
+        }, function(fileError){
+            resolve(fileError.code !== 1);
+        });
+    });
+};
+
+/**
+ *  File.dirExists
+ *
+ *  @param {String} url - the toURL path to check
+ *  @returns {Promise&lt;boolean|void&gt;}
+ * */
+File.dirExists = function(url){
+    return new Promise(function(resolve){
+        window.resolveLocalFileSystemURL(url, function(entry){
+
+            resolve(entry.isDirectory);
+
+        }, function(fileError){
+
+            resolve(fileError.code != 1);
+        });
+    });
+};
+
+/**
+ * File.requestFileSystem
+ *
+ * @param {int} TYPE - 0 == window.LocalFileSystem.TEMPORARY or 1 == window.LocalFileSystem.PERSISTENT
+ * @param {int} size - The size in bytes for example 5*1024*1024 == 5MB
+ * @returns {Promise}
+ * */
+File.requestFileSystem = function(TYPE, size) {
+    return new Promise(function (resolve, reject) {
+        window.requestFileSystem(TYPE, size, resolve, reject);
+    });
+};
+
+/**
+ * File.readDir
+ *
+ * @param {String} dirPath - a directory path to read
+ * @returns {Promise&lt;Array&gt;} - returns an array of Object files
+ * */
+File.readDir = function(dirPath){
+    return File.resolveFS(dirPath)
+        .then(function(dirEntry){
+            return new Promise(function(resolve, reject){
+                var reader = dirEntry.createReader();
+                reader.readEntries(function(entries){
+                    LOG.d(&apos;readDir:&apos;, entries);
+                    resolve(__transform(entries));
+                }, reject);
+            });
+        });
+};
+
+/**
+ * File.readFile
+ *
+ * @param {String} filePath - the file entry to readAsText
+ * @returns {Promise&lt;String|FileError&gt;}
+ */
+File.readFile = function(filePath) {
+
+    return File.resolveFS(filePath)
+        .then(function(fileEntry){
+            return new Promise(function(resolve, reject){
+                fileEntry.file(function(file) {
+                    var reader = new FileReader();
+                    reader.onerror = reject;
+                    reader.onabort = reject;
+
+                    reader.onloadend = function() {
+                        var textToParse = this.result;
+                        resolve(textToParse);
+                    };
+                    reader.readAsText(file);
+                    // readAsDataURL
+                    // readAsBinaryString
+                    // readAsArrayBuffer
+                });
+            });
+        });
+};
+
+/**
+ * File.createFile
+ *
+ * @param {String} directory - filepath file:// like string
+ * @param {String} filename - the filename including the .txt
+ * @returns {Promise&lt;FileEntry|FileError&gt;}
+ * */
+File.createFile = function(directory, filename){
+    return File.resolveFS(directory)
+        .then(function(dirEntry){
+            return new Promise(function(resolve, reject){
+                dirEntry.getFile(filename, { create: true }, function(entry){
+                    resolve(__transform([entry]));
+                }, reject);
+            });
+        });
+};
+
+/**
+ * write a file in the specified path
+ *
+ * @param {String} filepath - file:// path-like
+ * @param {String|Blob} content
+ * @returns {Promise&lt;Object|FileError&gt;}
+ * */
+File.write = function(filepath, content){
+    return File.appendToFile(filepath, content, true);
+};
+
+/**
+ * moveDir
+ *
+ * @param {String} source
+ * @param {String} destination
+ * @returns {Promise&lt;FileEntry|FileError&gt;}
+ * */
+File.moveDir = function(source, destination){
+    var newFolderName = destination.substring(destination.lastIndexOf(&apos;/&apos;) + 1);
+    var parent = destination.replace(newFolderName, &apos;&apos;);
+    
+    LOG.d(&apos;moveDir:&apos;, parent, newFolderName);
+    return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
+        .then(function(entries){
+            LOG.d(&apos;moveDir: resolved entries&apos;, entries);
+            return new Promise(function(resolve, reject){
+                entries[0].moveTo(entries[1], newFolderName, resolve, reject);
+            });
+        });
+};
+
+/**
+ * copyFile
+ * @param {String} source
+ * @param {String} destination
+ * @returns {Promise&lt;FileEntry|FileError&gt;}
+ * */
+File.copyFile = function(source, destination){
+    var newFilename = destination.substring(destination.lastIndexOf(&apos;/&apos;) + 1);
+    var parent = destination.replace(newFilename, &apos;&apos;);
+
+    return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
+        .then(function(entries){
+            // TODO: check if are really files
+            LOG.d(&apos;copyFileTo&apos;, entries);
+            return new Promise(function(resolve, reject){
+                entries[0].copyTo(entries[1], newFilename, resolve, reject);
+            });
+        });
+};
+
+/**
+ * copyDir
+ * @param {String} source
+ * @param {String} destination
+ * @returns {Promise&lt;FileEntry|FileError&gt;}
+ * */
+File.copyDir = function(source, destination){
+    var newFolderName = destination.substring(destination.lastIndexOf(&apos;/&apos;) + 1);
+    var parent = destination.replace(newFolderName, &apos;&apos;);
+
+    return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
+        .then(function(entries){
+            LOG.d(&apos;copyDir&apos;, source, &apos;in&apos;, destination);
+            return new Promise(function(resolve, reject){
+                entries[0].copyTo(entries[1], newFolderName, resolve, reject);
+            });
+        });
+};
+
+/**
+ * getMetadata from FileEntry or DirectoryEntry
+ * @param path {String} - the path string
+ * @returns {Promise&lt;Object|FileError&gt;}
+ */
+File.getMetadata = function(path){
+    return File.resolveFS(path)
+                .then(function(entry){
+                    return new Promise(function(resolve, reject){
+                        entry.getMetadata(resolve, reject);
+                    });                        
+                });
+};
+
+/**
+ * __transform utils function
+ * @private
+ * @param {Array} entries - an array of Entry type object
+ * @returns {Array.&lt;Object&gt;} - an array of Object
+ * */
+function __transform(entries){
+    var arr = entries.map((entry) =&gt; {
+        return {
+            fullPath: entry.fullPath,
+            path: entry.toURL(),
+            internalURL: entry.toInternalURL ? entry.toInternalURL() : &apos;&apos;,
+            isFile: entry.isFile,
+            isDirectory: entry.isDirectory
+        };
+    });
+    return (arr.length === 1) ? arr[0] : arr;
+}
+
+function checkPlugins(){
+    return window.resolveLocalFileSystemURL &amp;&amp; window.zip;
+}
+
+Object.keys(File).map((methodName) =&gt; {
+    File[methodName] = requireCondition(checkPlugins, 
+                                        File[methodName], 
+                                        null,
+                                        &apos;Check cordova-plugin-file and zip&apos;, 
+                                        &apos;warn&apos;);
+});
+
+module.exports = File;</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
