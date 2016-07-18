@@ -20,7 +20,7 @@
     "test": "npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
-    "version": "npm run build && npm run gendocs && git add -A dist/ docs/",
+    "version": "npm run build && npm run gendocs && git add --all --force dist/ docs/",
     "postversion": "git push origin && git push --tags"
   },
   "devDependencies": {
