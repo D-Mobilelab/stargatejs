@@ -32,7 +32,7 @@ var initPromise;
 var modulesLoaded;
 
 /**
- * Stargate.initialize waits the cordova deviceready if runs in hybrid env
+ * Stargate.initialize waits the cordova deviceready if runs in hybrid env 
  * @param {Object} [configuration={DEVICE_READY_TIMEOUT: 5000, modules: [['file', {}]]}] - the object configuration
  * @param {Number} configuration.DEVICE_READY_TIMEOUT how much to wait the deviceready event in ms
  * @param {Function} [callback=function(){}] - callback called when deviceready arrives
@@ -93,6 +93,11 @@ function initialize(configuration = {}, callback = function(){}){
     });    
 }
 
+/**
+ * moduleInitializer
+ * @param {array} moduleAndConf - [<string>, <object>] example of array: ['file',{}] or ['game', {}]
+ * @returns {promise}
+ */
 function moduleInitializer(moduleAndConf){
     var name = moduleAndConf[0];
     var conf = moduleAndConf[1];
@@ -125,7 +130,16 @@ function initModule(moduleAndConf){
  * @returns {String}
  */
 function getVersion() {
-    return [version, build];
+    return version;
+}
+
+/**
+ * Get the version and build: M.m.p.-<commitaftertag>-<commithash>
+ * @static
+ * @returns {String}
+ */
+function getVersionBuild() {
+    return build;
 }
 
 /**
@@ -353,4 +367,5 @@ if (process.env.NODE_ENV === 'development') {
         cookies.expire('stargateVersion');
     };
 }
-module.exports = publicInterface;
+
+export default publicInterface;
