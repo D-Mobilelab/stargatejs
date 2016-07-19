@@ -14,14 +14,17 @@
     "clean": "npm run clean:docs & npm run clean:dist & npm run clean:coverage",
     "lint": "eslint src test",
     "prebuild": "npm run clean && sh .getrevision.sh && git add src/info.js",
-    "build": "babel src --out-dir src5 && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
-    "minify": "uglifyjs dist/stargate.js --compress --source-map dist/stargate.js.map --output dist/stargate.min.js",
+    "transpile": "babel src --out-dir src5",
+    "build:dev": "npm run transpile && browserify --entry -t [ envify --NODE_ENV development ] src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
+    "build:prod": "npm run transpile && browserify --entry -t [ envify --NODE_ENV production ] src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
+    "minify": "uglifyjs dist/stargate.js --dead_code --source-map dist/stargate.js.map --output dist/stargate.min.js",
     "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
-    "test": "npm run clean && karma start --no-auto-watch --single-run",
+    "test": "export NODE_ENV=development && npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
     "version": "npm run build && npm run gendocs && git add --all --force dist/ docs/",
-    "postversion": "git push origin && git push --tags"
+    "postversion": "git push origin && git push --tags",
+    "serve": "http-server . -o"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
@@ -56,6 +59,7 @@
     "karma-coverage-es6": "^0.2.7",
     "karma-coveralls": "^1.1.2",
     "karma-doc-reporter": "0.0.1",
+    "karma-env-preprocessor": "^0.1.1",
     "karma-firefox-launcher": "^0.1.6",
     "karma-growl-reporter": "^0.1.1",
     "karma-html-reporter": "^0.2.7",
@@ -78,7 +82,7 @@
   },
   "browserify": {
     "transform": [
-      [
+      [        
         "babelify",
         {
           "presets": [

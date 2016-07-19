@@ -2,7 +2,6 @@
 // Generated on Thu Apr 07 2016 16:48:56 GMT+0200 (CEST)
 module.exports = function(config) {
     var karmaConf = {
-
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
         customLaunchers: {
@@ -46,6 +45,7 @@ module.exports = function(config) {
         browserify: {
             debug: true,
             transform: [
+                'envify',
                 'babelify',
                 ['browserify-istanbul', { instrumenter: require('isparta') }]
             ]

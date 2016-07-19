@@ -310,20 +310,7 @@ function goToWebIndex(){
     loadUrl(webUrl);
 }
 
-/**
- * just for testing purpose deinitialize stargate
- */
-function __deinit__(){
-    initPromise = null; 
-    initialized = false; 
-    isStargateOpen = false;
-    localStorage.removeItem('hybrid');
-    localStorage.removeItem('stargateVersion');
-    cookies.expire('hybrid');
-    cookies.expire('stargateVersion');
-}
-
-module.exports = {
+var publicInterface = {
     initialize,
     getVersion,    
     facebookShare: Facebook.facebookShare,
@@ -352,6 +339,18 @@ module.exports = {
     getWebappStartUrl: requireCondition(isInitialized, getWebappStartUrl, null, MESSAGE_INITIALIZED, 'warn'),
     getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn'),
     goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn'),
-    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn'),
-    __deinit__
+    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn')    
 };
+
+if (process.env.NODE_ENV === 'development') {
+    publicInterface.__deinit__ = function(){
+        initPromise = null; 
+        initialized = false; 
+        isStargateOpen = false;
+        localStorage.removeItem('hybrid');
+        localStorage.removeItem('stargateVersion');
+        cookies.expire('hybrid');
+        cookies.expire('stargateVersion');
+    };
+}
+module.exports = publicInterface;
