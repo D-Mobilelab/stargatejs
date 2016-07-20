@@ -14,4 +14,4 @@ const DEFAULT_CONFIGURATION = {
         ]*/        
     ]
 };
-module.exports = DEFAULT_CONFIGURATION;
+export default DEFAULT_CONFIGURATION;
