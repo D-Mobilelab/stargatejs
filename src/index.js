@@ -11,7 +11,9 @@ var build = require('./info').build;
 
 var fileModule = require('./modules/File');
 var Game = require('./modules/Game');
-var Connection = require('./modules/Connection');
+
+var NetworkInfo = require('./modules/Connection');
+var netInfoIstance = new NetworkInfo();
 
 var cookies = require('cookies-js');
 var DEFAULT_CONFIGURATION = require('./stargate.conf.js');
@@ -69,7 +71,7 @@ function initialize(configuration = {}, callback = function(){}){
             modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
             // Put getManifest at the beginning of the array
             modulesLoaded.unshift(getManifest());
-            Connection.initialize();
+            netInfoIstance.initialize();
                       
             return Promise.all(modulesLoaded);          
         }).then((results) => {
@@ -83,7 +85,7 @@ function initialize(configuration = {}, callback = function(){}){
     } else {
         LOG.i('No hybrid init');
         modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
-        Connection.initialize();
+        netInfoIstance.initialize();
         initPromise = Promise.all(modulesLoaded);
     }
     
@@ -209,7 +211,7 @@ function isOpen (){
  */
 function addListener(type, fn){
     if (type === 'connectionchange'){
-        Connection.addListener(type, fn);        
+        netInfoIstance.addListener(fn);        
     }
 }
 
@@ -220,7 +222,7 @@ function addListener(type, fn){
  */
 function removeListener(type, fn){
     if (type === 'connectionchange'){
-        Connection.removeListener(type, fn);
+        netInfoIstance.removeListener(fn);
     }
 }
 
