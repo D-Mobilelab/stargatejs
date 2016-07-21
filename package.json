@@ -15,15 +15,16 @@
     "lint": "eslint src test",
     "prebuild": "npm run clean && sh .getrevision.sh && git add src/info.js",
     "transpile": "babel src --out-dir src5",
-    "build:dev": "npm run transpile && browserify --entry -t [ envify --NODE_ENV development ] src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
-    "build:prod": "npm run transpile && browserify --entry -t [ envify --NODE_ENV production ] src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
+    "build:dev": "export NODE_ENV=development && npm run transpile && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
+    "build:prod": "export NODE_ENV=production && npm run transpile && browserify --entry src/index.js --outfile dist/stargate.js --standalone Stargate && npm run minify",
     "minify": "uglifyjs dist/stargate.js --dead_code --source-map dist/stargate.js.map --output dist/stargate.min.js",
-    "gendocs": "npm run clean:docs && esdoc -c esdoc.json",
+    "gendocs": "npm run clean:docs && node setdocspath.js docs/$npm_package_version && esdoc -c esdoc.json",
     "test": "export NODE_ENV=development && npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "karma start --browsers Chrome",
     "preversion": "npm run test",
-    "version": "npm run build && npm run gendocs && git add --all --force dist/ docs/",
-    "postversion": "git push origin && git push --tags",
+    "version": "npm run build:prod && npm run gendocs",
+    "postversion": "git push origin && git push --tags && npm run gh-deploy",
+    "gh-deploy": "git subtree push --prefix dist/ docs/ origin gh-pages",
     "serve": "http-server . -o"
   },
   "devDependencies": {
@@ -37,6 +38,7 @@
     "browserify": "^13.0.0",
     "browserify-istanbul": "^2.0.0",
     "coveralls": "^2.11.9",
+    "envify": "^3.4.1",
     "esdoc": "^0.4.7",
     "eslint": "^2.13.1",
     "eslint-config-airbnb": "^9.0.1",
@@ -82,15 +84,20 @@
   },
   "browserify": {
     "transform": [
-      [        
+      [
         "babelify",
         {
           "presets": [
-            "es2015"
+            "es2015",
+            "stage-0"
+          ],
+          "plugins": [
+            "add-module-exports"
           ],
           "comments": false
         }
-      ]
+      ],
+      "envify"
     ]
   }
 }

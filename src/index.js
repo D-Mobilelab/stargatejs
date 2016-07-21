@@ -32,11 +32,12 @@ var initPromise;
 var modulesLoaded;
 
 /**
- * Stargate.initialize waits the cordova deviceready if runs in hybrid env
+ * initialize waits the cordova deviceready if runs in hybrid environment
+ * @memberOf Stargate
  * @param {Object} [configuration={DEVICE_READY_TIMEOUT: 5000, modules: [['file', {}]]}] - the object configuration
  * @param {Number} configuration.DEVICE_READY_TIMEOUT how much to wait the deviceready event in ms
  * @param {Function} [callback=function(){}] - callback called when deviceready arrives
- * @returns {Promise<Object|Timeout>}
+ * @return {Promise<Object|String>}
  */
 function initialize(configuration = {}, callback = function(){}){
     if (initPromise){ 
@@ -93,6 +94,11 @@ function initialize(configuration = {}, callback = function(){}){
     });    
 }
 
+/**
+ * moduleInitializer
+ * @param {array} moduleAndConf - [<string>, <object>] example of array: ['file',{}] or ['game', {}]
+ * @returns {promise}
+ */
 function moduleInitializer(moduleAndConf){
     var name = moduleAndConf[0];
     var conf = moduleAndConf[1];
@@ -125,7 +131,16 @@ function initModule(moduleAndConf){
  * @returns {String}
  */
 function getVersion() {
-    return [version, build];
+    return version;
+}
+
+/**
+ * Get the version and build: M.m.p.-<commitaftertag>-<commithash>
+ * @static
+ * @returns {String}
+ */
+function getVersionBuild() {
+    return build;
 }
 
 /**
@@ -266,8 +281,8 @@ function getWebappOrigin() {
 
 
 /**
- * loadUrl
- * 
+ * loadUrl loads and url in the cordova webview. 
+ * it needs to be called after initialization
  * @param {string} url - an http url to load in the webview
  */
 function loadUrl(url){
@@ -310,7 +325,8 @@ function goToWebIndex(){
     loadUrl(webUrl);
 }
 
-var publicInterface = {
+
+var Stargate = {
     initialize,
     getVersion,    
     facebookShare: Facebook.facebookShare,
@@ -343,7 +359,7 @@ var publicInterface = {
 };
 
 if (process.env.NODE_ENV === 'development') {
-    publicInterface.__deinit__ = function(){
+    Stargate.__deinit__ = function(){
         initPromise = null; 
         initialized = false; 
         isStargateOpen = false;
@@ -353,4 +369,5 @@ if (process.env.NODE_ENV === 'development') {
         cookies.expire('stargateVersion');
     };
 }
-module.exports = publicInterface;
+
+export default Stargate;

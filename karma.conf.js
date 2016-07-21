@@ -43,11 +43,10 @@ module.exports = function(config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
         browserify: {
-            debug: true,
-            transform: [
-                'envify',
-                'babelify',
-                ['browserify-istanbul', { instrumenter: require('isparta') }]
+            'transform': [                
+                ['babelify', { 'presets': ['es2015', 'stage-0'], 'plugins': ['add-module-exports'], 'comments': false }],
+                ['browserify-istanbul', { instrumenter: require('isparta') }], 
+                'envify'
             ]
         },
         coverageReporter: {
@@ -59,9 +58,9 @@ module.exports = function(config) {
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['Chrome'],
-        browserConsoleLogOptions:{            
-            level:  "debug",
-            format: "%b %T: %m",            
+        browserConsoleLogOptions: {            
+            level: 'debug',
+            format: '%b %T: %m',            
             terminal: false            
         },
 
