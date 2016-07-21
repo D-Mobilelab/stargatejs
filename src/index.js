@@ -24,6 +24,7 @@ var stargateModules = {
     game: new Game()
 };
 var LOG = new Logger('all', '[Stargate]');
+
 var initialized = false;
 var isStargateOpen = false;
 var CUSTOM_CONF = {};
@@ -43,7 +44,7 @@ var modulesLoaded;
  */
 function initialize(configuration = {}, callback = function(){}){
     if (initPromise){ 
-        LOG.w('Initialized already called');
+        LOG.warn('Initialized already called');
         return initPromise; 
     }
     
@@ -51,7 +52,7 @@ function initialize(configuration = {}, callback = function(){}){
     
     // if isHybrid wait deviceready otherwise just call init 
     if (isHybrid()) {
-        LOG.i('Hybrid init');
+        LOG.info('Hybrid init');
         initPromise = new Promise((resolve, reject) => {
             document.addEventListener('deviceready', function onready(e){
                 resolve(e);
@@ -66,7 +67,7 @@ function initialize(configuration = {}, callback = function(){}){
             }, CUSTOM_CONF.DEVICE_READY_TIMEOUT);
 
         }).then((readyEvent) => {
-            LOG.i('ReadyEvent', readyEvent);           
+            LOG.info('ReadyEvent', readyEvent);           
             
             modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
             // Put getManifest at the beginning of the array
@@ -83,7 +84,7 @@ function initialize(configuration = {}, callback = function(){}){
         });
         
     } else {
-        LOG.i('No hybrid init');
+        LOG.info('No hybrid init');
         modulesLoaded = CUSTOM_CONF.modules.map(moduleInitializer);
         netInfoIstance.initialize();
         initPromise = Promise.all(modulesLoaded);
@@ -111,7 +112,7 @@ function moduleInitializer(moduleAndConf){
             return Promise.resolve([name, true]);
         }                       
     } else { 
-        LOG.w([name, 'unsupported'].join(' '));
+        LOG.warn([name, 'unsupported'].join(' '));
         return Promise.reject([name, 'unsupported'].join(' '));
     }
 }
@@ -236,12 +237,12 @@ function getManifest() {
     var MANIFEST_PATH = '';
     if (window.cordova.file) {
         MANIFEST_PATH = [window.cordova.file.applicationStorageDirectory, 'www/manifest.json'].join('');
-        LOG.i('getManifest', MANIFEST_PATH);
+        LOG.info('getManifest', MANIFEST_PATH);
         return fileModule.readFileAsJSON(MANIFEST_PATH);
     }
     
     if (window.hostedwebapp) {
-        LOG.i('getManifest from hostedwebapp');
+        LOG.info('getManifest from hostedwebapp');
         return new Promise((resolve, reject) => {
             window.hostedwebapp.getManifest(resolve, reject);
         });
@@ -296,9 +297,9 @@ function loadUrl(url){
         var _url = url.split('?')[0];
         window.resolveLocalFileSystemURL(_url, (entry) => {
             var internalUrl = `${entry.toInternalURL()}?hybrid=1`;
-            LOG.d('Redirect to', internalUrl);
+            LOG.info('Redirect to', internalUrl);
             window.location.href = internalUrl;
-        }, LOG.e);
+        }, LOG.error);
     } else {
         window.location.href = url;
     }
@@ -314,7 +315,7 @@ function goToLocalIndex(){
         var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/index.html`;
         loadUrl(queryfy(LOCAL_INDEX, qs));
     } else {
-        LOG.w('Missing cordova-plugin-file. Install it with: cordova plugin add cordova-plugin-file');
+        LOG.warn('Missing cordova-plugin-file. Install it with: cordova plugin add cordova-plugin-file');
     }
 }
 
@@ -337,27 +338,27 @@ var Stargate = {
                                     addListener, 
                                     null, 
                                     MESSAGE_INITIALIZED, 
-                                    'warn'),
+                                    'warn', LOG),
     removeListener: requireCondition(isInitialized, 
                                     removeListener, 
                                     null, 
                                     MESSAGE_INITIALIZED, 
-                                    'warn'),
+                                    'warn', LOG),
     checkConnection: requireCondition(isInitialized, 
-                                    Connection.checkConnection, 
+                                    netInfoIstance.checkConnection, 
                                     null, 
                                     MESSAGE_INITIALIZED, 
-                                    'warn'),
+                                    'warn', LOG),
     file: stargateModules.file,
     game: stargateModules.game,
     initModule,
     isInitialized,
     isHybrid,
     isOpen,
-    getWebappStartUrl: requireCondition(isInitialized, getWebappStartUrl, null, MESSAGE_INITIALIZED, 'warn'),
-    getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn'),
-    goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn'),
-    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn')    
+    getWebappStartUrl: requireCondition(isInitialized, getWebappStartUrl, null, MESSAGE_INITIALIZED, 'warn', LOG),
+    getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn', LOG),
+    goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
+    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG)    
 };
 
 if (process.env.NODE_ENV === 'development') {

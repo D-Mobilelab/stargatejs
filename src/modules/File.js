@@ -8,8 +8,9 @@ var requireCondition = require('./Decorators').requireCondition;
  * @requires ./Utils.js
  */
 var File = {};
+var LOG = new Logger('ALL', '[File - module]');
 
-File.LOG = new Logger('ALL', '[File - module]');
+File.LOG = LOG;
 window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
 /**
@@ -160,7 +161,7 @@ File.removeDir = function(dirpath){
  * */
 File._promiseZip = function(zipPath, outFolder, _onProgress){
 
-    LOG.d('PROMISEZIP:', arguments);
+    LOG.log('PROMISEZIP:', arguments);
     return new Promise(function(resolve, reject){
         window.zip.unzip(zipPath, outFolder, function(result){
             if (result === 0){
@@ -282,7 +283,7 @@ File.readDir = function(dirPath){
             return new Promise(function(resolve, reject){
                 var reader = dirEntry.createReader();
                 reader.readEntries(function(entries){
-                    LOG.d('readDir:', entries);
+                    LOG.log('readDir:', entries);
                     resolve(__transform(entries));
                 }, reject);
             });
@@ -358,10 +359,10 @@ File.moveDir = function(source, destination){
     var newFolderName = destination.substring(destination.lastIndexOf('/') + 1);
     var parent = destination.replace(newFolderName, '');
     
-    LOG.d('moveDir:', parent, newFolderName);
+    LOG.log('moveDir:', parent, newFolderName);
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
-            LOG.d('moveDir: resolved entries', entries);
+            LOG.log('moveDir: resolved entries', entries);
             return new Promise(function(resolve, reject){
                 entries[0].moveTo(entries[1], newFolderName, resolve, reject);
             });
@@ -381,7 +382,7 @@ File.copyFile = function(source, destination){
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
             // TODO: check if are really files
-            LOG.d('copyFileTo', entries);
+            LOG.log('copyFileTo', entries);
             return new Promise(function(resolve, reject){
                 entries[0].copyTo(entries[1], newFilename, resolve, reject);
             });
@@ -400,7 +401,7 @@ File.copyDir = function(source, destination){
 
     return Promise.all([File.resolveFS(source), File.resolveFS(parent)])
         .then(function(entries){
-            LOG.d('copyDir', source, 'in', destination);
+            LOG.log('copyDir', source, 'in', destination);
             return new Promise(function(resolve, reject){
                 entries[0].copyTo(entries[1], newFolderName, resolve, reject);
             });
