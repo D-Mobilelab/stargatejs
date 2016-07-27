@@ -22,7 +22,7 @@ describe('Connection tests', () => {
         simulateEvent('offline', { _type: 'offline' }, 1, 'window');
 
         setTimeout(() => {
-            expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'offline' });
+            expect(onchange).toHaveBeenCalledWith({ type: 'offline', networkState: 'none' });
             done();
         }, 600);
     });
@@ -36,7 +36,7 @@ describe('Connection tests', () => {
         simulateEvent('online', { _type: 'online' }, 1, 'window');
 
         setTimeout(() => {
-            expect(onchange).toHaveBeenCalledWith({ type: 'none', networkState: 'online' });
+            expect(onchange).toHaveBeenCalledWith({ type: 'online', networkState: 'none' });
             connection.removeListener(onchange);
             done();
         }, 600);
@@ -52,7 +52,7 @@ describe('Connection tests', () => {
         simulateEvent('online', { _type: 'online' }, 1, 'window');
 
         setTimeout(() => {
-           expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'online' });
+           expect(onchange).toHaveBeenCalledWith({ type: 'online', networkState: 'wifi' });
            netInfoMock.uninstall();
            // connection.removeListener('connectionchange', onchange);
            done();
@@ -73,7 +73,7 @@ describe('Connection tests', () => {
         simulateEvent('offline', { _type: 'offline' }, 1, 'window');
 
         setTimeout(() => {
-            expect(onchange).toHaveBeenCalledWith({ type: 'wifi', networkState: 'offline' });
+            expect(onchange).toHaveBeenCalledWith({ type: 'offline', networkState: 'wifi' });
             done();
             // connection.removeListener('connectionchange', onchange);
             netInfoMock.uninstall();

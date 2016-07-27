@@ -18,8 +18,8 @@ class NetworkInfo{
         
         /** type {object} */
         this.connectionStatus = {    
-            type: 'none', // wifi, 3g, 4g, none
-            networkState: 'none' // online|offline
+            type: 'none',         // online|offline
+            networkState: 'none'  // wifi, 3g, 4g, none
         };
         
         /** type {boolean} */
@@ -33,18 +33,17 @@ class NetworkInfo{
      */
     initialize(){        
         try {
+            // connection is present in new browsers
             if (window.navigator.connection){
-                this.connectionStatus.type = window.navigator.connection.type;
-                
-                if (window.navigator.connection.type !== 'none'){
-                    this.connectionStatus.networkState = 'online';
+                if (window.navigator.connection.type){
+                    this.connectionStatus.networkState = window.navigator.connection.type;
                 }
                 this.UNSUPPORTED = false;
             }
         } catch (e){
             // Browser case, unsupported or plugin cordova not installed
             this.UNSUPPORTED = true;
-            this.connectionStatus.networkState = navigator.onLine ? 'online' : 'offline';
+            this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';
         } finally {        
             this.__bindConnectionEvents__();
         }
@@ -52,7 +51,7 @@ class NetworkInfo{
 
     checkConnection(){
         if (this.UNSUPPORTED){
-            this.connectionStatus.networkState = navigator.onLine ? 'online' : 'offline';
+            this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';
         }
         return this.connectionStatus;
     }
@@ -129,8 +128,8 @@ class NetworkInfo{
      * @access private
      */
     __updateConnectionStatus__(theEvent){
-        this.connectionStatus.type = navigator.connection ? navigator.connection.type : 'none';
-        this.connectionStatus.networkState = theEvent.type;
+        this.connectionStatus.type = theEvent.type;
+        this.connectionStatus.networkState = navigator.connection ? navigator.connection.type : 'none';
         bus.trigger('connectionchange', this.connectionStatus);    
     }
 }
