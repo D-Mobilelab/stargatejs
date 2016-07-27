@@ -346,7 +346,7 @@ var Stargate = {
                                     'warn', LOG),
     checkConnection: requireCondition(isInitialized, 
                                     netInfoIstance.checkConnection, 
-                                    null, 
+                                    netInfoIstance, 
                                     MESSAGE_INITIALIZED, 
                                     'warn', LOG),
     file: stargateModules.file,
