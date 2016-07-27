@@ -1,57 +1,77 @@
 var Logger = require('./Logger');
-var requireCondition = require('./Decorators').requireCondition;
 var LOG = new Logger('ALL', '[Facebook]');
 const ERROR_MESSAGE = 'Cordova plugin for facebook is undefined';
 
-function facebookLogin(scope, callbackSuccess, callbackError) {
+function facebookPluginIsDefined(){
+    var pluginIsDefined = typeof window.facebookConnectPlugin !== 'undefined';
+    if (!pluginIsDefined){
+        LOG.warn(ERROR_MESSAGE);                
+    }
+    return pluginIsDefined;
+}
 
-    window.facebookConnectPlugin.login(
-        scope.split(','),
-        // success callback
-        function (userData) {
-            LOG.d('got userdata: ', userData);
-            
-            facebookConnectPlugin.getAccessToken(
-                function(token) {
-                    callbackSuccess({ accessToken: token });
+export default class Facebook{
+    /**
+     * @param {Logger} [logger=new Logger("all", "[Facebook]")]
+     */
+    constructor(logger = LOG){
+        this.LOG = logger;
+    }
+
+    facebookLogin(scope, callbackSuccess = () => {}, callbackError = () => {}){
+        if (!facebookPluginIsDefined()) { return; }
+
+        return new Promise((resolve, reject) => {
+            window.facebookConnectPlugin.login(scope.split(','), 
+            (userData) => {                
+                resolve(userData);
+            }, 
+            (error) => {
+                callbackError(error);
+            });
+        });      
+    }
+
+    getAccessToken(callbackSuccess = () => {}, callbackError = () => {}){
+        if (!facebookPluginIsDefined()) { return; }
+        return new Promise((resolve, reject) => {
+            window.facebookConnectPlugin.getAccessToken(
+                (token) => {
+                    var result = { accessToken: token };
+                    callbackSuccess(result);
+                    resolve(result);
                 },
-                function(err) {
-                    callbackError({ error: err });
+                (err) => {
+                    var result = { error: err };
+                    callbackError(result);
+                    reject(result);
                 }
             );
-        },
+        });       
+    }
 
-        // error callback
-        function (error) {
-            LOG.e('Got FB login error:', error);
-            callbackError({ error });
-        }
-    );
+    facebookShare(url, callbackSuccess = () => {}, callbackError = () => {}){
+        if (!facebookPluginIsDefined()) { return; }
+        var options = {
+            method: 'share',
+            href: url
+        };
+        return new Promise((resolve, reject) => {
+            window.facebookConnectPlugin.showDialog(
+                options,        
+                (message) => {
+                    var result = { message };
+                    callbackSuccess(result);
+                    resolve(result);
+                },
+                (error) => {
+                    var result = { error };
+                    callbackError(result);
+                    reject(result);
+                }
+            );
+        });
+
+    }
+
 }
-
-function facebookShare(url, callbackSuccess, callbackError) {
-    var options = {
-        method: 'share',
-        href: url
-    };
-    
-    window.facebookConnectPlugin.showDialog(
-        options,        
-        function(message){
-            callbackSuccess({ message });
-        },
-        function(error){           
-            callbackError({ error });
-        }
-    );
-}
-
-function facebookPluginIsDefined(){
-    return typeof window.facebookConnectPlugin !== 'undefined';
-}
-
-module.exports = {
-    facebookLogin: requireCondition(facebookPluginIsDefined, facebookLogin, null, ERROR_MESSAGE, 'warn'),
-    facebookShare: requireCondition(facebookPluginIsDefined, facebookShare, null, ERROR_MESSAGE, 'warn'),
-    LOG
-};

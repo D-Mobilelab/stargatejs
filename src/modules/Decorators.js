@@ -1,16 +1,16 @@
 /**
  * Decorator function: 
- * @private
  * @param {Boolean|Function} param - the require param or function. the function should return a boolean 
  * @param {Function} afterFunction - the function to decorate
  * @param {Object} [context=null] - the optional this-context. default to null
  * @param {String} message - the message to show
  * @param {String} type - error raise an error, warn, info, debug write the message in console
+ * @param {Logger} logger - an istance of logger class
  * @throws {Error}
  * @returns {Function} 
  */
-module.exports.requireCondition = function(param, afterFunction, context = null, message, type){ 
-	return function(){
+function requireCondition(param, afterFunction, context = null, message, type, logger){ 
+	return function decorator(){
         if (typeof param === 'function'){
             param = param.call(null);
         }
@@ -22,15 +22,17 @@ module.exports.requireCondition = function(param, afterFunction, context = null,
 					throw new Error(message);
 					break;
 				case "warn":
-					console.warn(message);
+					logger.warn(message);
 					break;
 				case "info":
-					console.info(message);
+					logger.info(message);
 					break;
 				default:
-					console.log(message);
+					logger.log(message);
 					break;
 			}			
 		}
 	};
 }
+
+export { requireCondition };
