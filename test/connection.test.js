@@ -27,6 +27,12 @@ describe('Connection tests', () => {
         }, 600);
     });
 
+    it('Test connection status after initialize', () => {
+        connection.initialize();
+        console.log(connection.checkConnection());
+        expect(connection.checkConnection()).toEqual({ type: 'online', networkState: 'none' });
+    });
+
     it('Test Connection online if it\'s a browser', (done) => {
         connection.initialize();
 

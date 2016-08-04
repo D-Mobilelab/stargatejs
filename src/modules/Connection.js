@@ -43,8 +43,8 @@ class NetworkInfo{
         } catch (e){
             // Browser case, unsupported or plugin cordova not installed
             this.UNSUPPORTED = true;
+        } finally {
             this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';
-        } finally {        
             this.__bindConnectionEvents__();
         }
     }
