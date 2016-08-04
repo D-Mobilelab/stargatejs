@@ -3,6 +3,7 @@ var Logger = require('./modules/Logger');
 var extend = require('./modules/Utils').extend;
 var dequeryfy = require('./modules/Utils').dequeryfy;
 var queryfy = require('./modules/Utils').queryfy;
+var getType = require('./modules/Utils').getType;
 
 var requireCondition = require('./modules/Decorators').requireCondition;
 var Facebook = require('./modules/Facebook');
@@ -230,13 +231,13 @@ function removeListener(type, fn){
 /**
  * get Manifest in the hybrid app
  * 
- * @returns {promise} - in success case fullfilled with Object
+ * @returns {promise<object>} - in success case fullfilled with Object
  */
 function getManifest() {
     
     var MANIFEST_PATH = '';
     if (window.cordova.file) {
-        MANIFEST_PATH = [window.cordova.file.applicationStorageDirectory, 'www/manifest.json'].join('');
+        MANIFEST_PATH = [window.cordova.file.applicationDirectory, 'www/manifest.json'].join('');
         LOG.info('getManifest', MANIFEST_PATH);
         return fileModule.readFileAsJSON(MANIFEST_PATH);
     }
@@ -310,7 +311,7 @@ function loadUrl(url){
  * redirect the webview to the local index.html
  * */
 function goToLocalIndex(){
-    if (window.cordova.file.applicationDirectory !== 'undefined'){
+    if (getType(window.cordova.file.applicationDirectory) !== 'undefined'){
         var qs = { hybrid: 1 };
         var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/index.html`;
         loadUrl(queryfy(LOCAL_INDEX, qs));
@@ -331,7 +332,8 @@ function goToWebIndex(){
 
 var Stargate = {
     initialize,
-    getVersion,    
+    getVersion,
+    getVersionBuild,    
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
     addListener: requireCondition(isInitialized, 
