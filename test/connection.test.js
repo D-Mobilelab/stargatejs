@@ -31,6 +31,7 @@ describe('Connection tests', () => {
         connection.initialize();
         console.log(connection.checkConnection());
         expect(connection.checkConnection()).toEqual({ type: 'online', networkState: 'none' });
+        expect(connection.checkConnection()).not.toEqual({ type: 'offline', networkState: 'none' });
     });
 
     it('Test Connection online if it\'s a browser', (done) => {

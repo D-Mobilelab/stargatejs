@@ -33,15 +33,11 @@ class NetworkInfo{
      */
     initialize(){        
         try {
-            // connection is present in new browsers
-            if (window.navigator.connection){
-                if (window.navigator.connection.type){
-                    this.connectionStatus.networkState = window.navigator.connection.type;
-                }
-                this.UNSUPPORTED = false;
-            }
+            // Connection is present in new browsers
+            this.connectionStatus.networkState = window.navigator.connection.type;            
         } catch (e){
-            // Browser case, unsupported or plugin cordova not installed
+            // Browser (desktop) case, unsupported or plugin cordova not installed
+            this.connectionStatus.networkState = 'none';
             this.UNSUPPORTED = true;
         } finally {
             this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';
@@ -50,9 +46,10 @@ class NetworkInfo{
     }
 
     checkConnection(){
-        if (this.UNSUPPORTED){
-            this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';
+        if (!this.UNSUPPORTED){
+            this.connectionStatus.networkState = window.navigator.connection.type;
         }
+        this.connectionStatus.type = navigator.onLine ? 'online' : 'offline';        
         return this.connectionStatus;
     }
 
@@ -129,7 +126,9 @@ class NetworkInfo{
      */
     __updateConnectionStatus__(theEvent){
         this.connectionStatus.type = theEvent.type;
-        this.connectionStatus.networkState = navigator.connection ? navigator.connection.type : 'none';
+        if (!this.UNSUPPORTED){
+            this.connectionStatus.networkState = navigator.connection.type;        
+        }
         bus.trigger('connectionchange', this.connectionStatus);    
     }
 }
