@@ -79,8 +79,7 @@
   "dependencies": {
     "babel-polyfill": "^6.9.1",
     "cookies-js": "^1.2.2",
-    "http-francis": "^0.1.4",
-    "md5": "^2.1.0"
+    "http-francis": "^0.1.4"
   },
   "browserify": {
     "transform": [
