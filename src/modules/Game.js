@@ -3,6 +3,9 @@ var Logger = require('./Logger');
 var JSONPRequest = require('http-francis').JSONPRequest;
 var extend = require('./Utils').extend;
 var dequeryfy = require('./Utils').dequeryfy;
+var queryfy = require('./Utils').queryfy;
+var getJSON = require('./Utils').getJSON;
+var getImageRaw = require('./Utils').getImageRaw;
 
 var baseDir,
     cacheDir,
@@ -13,16 +16,13 @@ var baseDir,
     stargatejsDir,
     CONF = {
         sdk_url: '',
-        dixie_url: '',
         api: '',
-        ga_for_game_url: '',
         gamifive_info_api: '',
         bundle_games: []
     },
     downloading = false;
 
 var emptyOfflineData = {
-    GaForGame: {},
     GamifiveInfo: {},
     queues: {}
 };
@@ -54,44 +54,44 @@ var obj = {
 
 var LOG = new Logger('ALL', '[Game - module]', { background: 'black', color: '#5aa73a' });
 
-    /**
-     * @constructor
-     * @alias module:src/modules/Game
-     * @example
-     *
-     * var sgConf = modules: ["game"],
-     *     modules_conf: {
-     *           "game": {
-     *               "bundle_games": [
-     *                   "<content_id>",
-     *                   "<content_id>"
-     *               ]
-     *           }
-     *       };
-     *
-     * var afterSgInit = Stargate.initialize(sgConf);
-     * afterSgInit
-     * .then(function(){
-     *      return Stargate.game.download(gameObject, {onStart:function(ev){}, onEnd:function(ev){}, onProgress:function(ev){}})
-     * })
-     * .then(function(gameID){
-     *      Stargate.game.play(gameID);
-     * });
-     * */
+/**
+ * @constructor
+ * @alias module:src/modules/Game
+ * @example
+ *
+ * var sgConf = modules: ["game"],
+ *     modules_conf: {
+ *           "game": {
+ *               "bundle_games": [
+ *                   "<content_id>",
+ *                   "<content_id>"
+ *               ]
+ *           }
+ *       };
+ *
+ * var afterSgInit = Stargate.initialize(sgConf);
+ * afterSgInit
+ * .then(function(){
+ *      return Stargate.game.download(gameObject, {onStart:function(ev){}, onEnd:function(ev){}, onProgress:function(ev){}})
+ * })
+ * .then(function(gameID){
+ *      Stargate.game.play(gameID);
+ * });
+ * */
 function Game(){}
 
-    /**
-     * Init must be called after the 'deviceready' event
-     *
-     * @param {Object} customConf - the configuration
-     * @param {String} customConf.sdk_url
-     * @param {String} customConf.dixie_url
-     * @param {String} customConf.api
-     * @param {String} customConf.ga_for_game_url
-     * @param {String} customConf.gamifive_info_api
-     * @param {Array} customConf.bundle_games
-     * @returns {Promise<Array<boolean>>}
-     * */
+/**
+ * Init must be called after the 'deviceready' event
+ *
+ * @param {Object} customConf - the configuration
+ * @param {String} customConf.sdk_url
+ * @param {String} customConf.dixie_url
+ * @param {String} customConf.api
+ * @param {String} customConf.ga_for_game_url
+ * @param {String} customConf.gamifive_info_api
+ * @param {Array} customConf.bundle_games
+ * @returns {Promise<Array<boolean>>}
+ * */
 Game.prototype.initialize = function(customConf){
          
     if (customConf){
@@ -112,10 +112,10 @@ Game.prototype.initialize = function(customConf){
     }
 
 
-        /**
-         * Putting games under Documents r/w. ApplicationStorage is read only
-         * on android ApplicationStorage is r/w
-         */
+    /**
+     * Putting games under Documents r/w. ApplicationStorage is read only
+     * on android ApplicationStorage is r/w
+     */
     if (window.device.platform.toLowerCase() == 'ios'){ baseDir += 'Documents/'; }
     if (window.device.platform.toLowerCase() == 'android'){ tempDirectory = cacheDir; }
 
@@ -135,14 +135,14 @@ Game.prototype.initialize = function(customConf){
 
     LOG.info('cordova JS dir to include', constants.CORDOVAJS);
 
-        /** expose */
+    /** expose */
     this.BASE_DIR = constants.BASE_DIR;
     this.OFFLINE_INDEX = constants.WWW_DIR + 'index.html';
 
 
-        /**
-         * Create directories
-         * */
+    /**
+     * Create directories
+     * */
     var gamesDirTask = fileModule.createDir(constants.BASE_DIR, 'games');
     var scriptsDirTask = fileModule.createDir(constants.BASE_DIR, 'scripts');
     var createOfflineDataTask = fileModule.fileExists(constants.BASE_DIR + 'offlineData.json')
@@ -161,50 +161,47 @@ Game.prototype.initialize = function(customConf){
             });
 
     return Promise.all([
-             gamesDirTask,
-             scriptsDirTask,
-             createOfflineDataTask
-         ]).then(function(results){
-            LOG.log('GamesDir, ScriptsDir, offlineData.json created', results);
-            return copyAssets();
-        }).then(getSDK);
+        gamesDirTask,
+        scriptsDirTask,
+        createOfflineDataTask
+    ])
+    .then(function(results){
+        LOG.log('GamesDir, ScriptsDir, offlineData.json created', results);
+        return copyAssets();
+    })
+    .then(getSDK);
 };
 
 function copyAssets(){
     return Promise.all([
-            fileModule.dirExists(constants.BASE_DIR + 'gameover_template'),
-            fileModule.dirExists(constants.SDK_DIR + 'plugins'),
-            fileModule.fileExists(constants.SDK_DIR + 'cordova.js'),
-            fileModule.fileExists(constants.SDK_DIR + 'cordova_plugins.js'),
-            fileModule.fileExists(constants.SDK_DIR + 'stargate.js'),
-            fileModule.fileExists(constants.SDK_DIR + 'gamesFixes.js')
-        ]).then(function(results){
-            var all = [];
-            if (!results[0]){
-                all.push(fileModule.copyDir(constants.WWW_DIR + 'gameover_template', constants.BASE_DIR + 'gameover_template'));
-            }
+        fileModule.dirExists(constants.BASE_DIR + 'gameover_template'),
+        fileModule.dirExists(constants.SDK_DIR + 'plugins'),
+        fileModule.fileExists(constants.SDK_DIR + 'cordova.js'),
+        fileModule.fileExists(constants.SDK_DIR + 'cordova_plugins.js'),
+        fileModule.fileExists(constants.SDK_DIR + 'gamesFixes.js')
+    ]).then(function(results){
+        var all = [];
+        if (!results[0]){
+            all.push(fileModule.copyDir(constants.WWW_DIR + 'gameover_template', constants.BASE_DIR + 'gameover_template'));
+        }
 
-            if (!results[1]){
-                all.push(fileModule.copyDir(constants.WWW_DIR + 'plugins', constants.SDK_DIR + 'plugins'));
-            }
+        if (!results[1]){
+            all.push(fileModule.copyDir(constants.WWW_DIR + 'plugins', constants.SDK_DIR + 'plugins'));
+        }
 
-            if (!results[2]){
-                all.push(fileModule.copyFile(constants.CORDOVAJS, constants.SDK_DIR + 'cordova.js'));
-            }
+        if (!results[2]){
+            all.push(fileModule.copyFile(constants.CORDOVAJS, constants.SDK_DIR + 'cordova.js'));
+        }
 
-            if (!results[3]){
-                all.push(fileModule.copyFile(constants.CORDOVA_PLUGINS_JS, constants.SDK_DIR + 'cordova_plugins.js'));
-            }
+        if (!results[3]){
+            all.push(fileModule.copyFile(constants.CORDOVA_PLUGINS_JS, constants.SDK_DIR + 'cordova_plugins.js'));
+        }
 
-            if (!results[4]){
-                all.push(fileModule.copyFile(constants.STARGATEJS, constants.SDK_DIR + 'stargate.js'));
-            }
-
-            if (!results[5]){
-                all.push(fileModule.copyFile(constants.WWW_DIR + 'js/gamesFixes.js', constants.SDK_DIR + 'gamesFixes.js'));
-            }
-            return Promise.all(all);
-        });
+        if (!results[4]){
+            all.push(fileModule.copyFile(constants.WWW_DIR + 'js/gamesFixes.js', constants.SDK_DIR + 'gamesFixes.js'));
+        }
+        return Promise.all(all);
+    });
 }
 
     /* function getRemoteMetadata(url){
@@ -221,113 +218,99 @@ function copyAssets(){
 
 function getSDK(){
     var now = new Date();
-    var sdkURLFresh = queryfy(CONF.sdk_url, { 'v': now.getTime() });
-    var dixieURLFresh = queryfy(CONF.dixie_url, { 'v': now.getTime(), 'country': 'xx-gameasy' });
+    var sdkURLFresh = queryfy(CONF.sdk_url, { v: now.getTime() });    
 
-    return Promise.all([
-            fileModule.fileExists(constants.SDK_DIR + 'dixie.js'),
-            fileModule.fileExists(constants.SDK_DIR + 'gfsdk.min.js')
-        ]).then(function(results){
-            var isDixieDownloaded = results[0],
-                isSdkDownloaded = results[1],
+    return fileModule.fileExists(constants.SDK_DIR + 'gfsdk.min.js')
+        .then(function(result){
+            var isSdkDownloaded = result,
                 tasks = [];
             
             if (CONF.sdk_url !== '' && !isSdkDownloaded){
                 LOG.log('isSdkDownloaded', isSdkDownloaded, 'get SDK', sdkURLFresh);
                 tasks.push(new fileModule.download(sdkURLFresh, constants.SDK_DIR, 'gfsdk.min.js').promise);
             }
-
-            if (CONF.dixie_url !== '' && !isDixieDownloaded){
-                LOG.log('isDixieDownloaded', isDixieDownloaded, 'get dixie', dixieURLFresh);
-                tasks.push(new fileModule.download(dixieURLFresh, constants.SDK_DIR, 'dixie.js').promise);
-            }
             
             return Promise.all(tasks);
-        }).then(function getSdkMetaData(){
+        })
+        .then(function getSdkMetaData(){
             // Getting file meta data            
-            return Promise.all([
-                fileModule.getMetadata(constants.SDK_DIR + 'dixie.js'),        
+            return Promise.all([        
                 fileModule.getMetadata(constants.SDK_DIR + 'gfsdk.min.js')
             ]);
-        }).then(function checkSdkDate(results){
-            var sdkMetadata = results[0],
-                dixieMetadata = results[1], 
+        })
+        .then(function checkSdkDate(result){
+            var sdkMetadata = result,
                 tasks = [];
             
             var lastSdkModification = new Date(sdkMetadata.modificationTime);
-            var lastDixieModification = new Date(dixieMetadata.modificationTime);
-            
+
             // lastModification day < today then download it
             if (lastSdkModification.getDate() < now.getDate()){
                 LOG.log('updating sdk', sdkURLFresh, lastSdkModification);
                 tasks.push(new fileModule.download(sdkURLFresh, constants.SDK_DIR, 'gfsdk.min.js').promise);
             }
 
-            if (lastDixieModification.getDate() < now.getDate()){
-                LOG.log('updating dixie', dixieURLFresh, lastDixieModification);
-                tasks.push(new fileModule.download(dixieURLFresh, constants.SDK_DIR, 'dixie.js').promise);
-            }
             return Promise.all(tasks);
         });
 }
 
-    /**
-     * download the game and unzip it
-     *
-     * @param {object} gameObject - The gameObject with the url of the html5game's zip
-     * @param {object} [callbacks={}] - an object with start-end-progress callbacks
-     * @param [callbacks.onProgress=function(){}] - a progress function filled with the percentage
-     * @param [callbacks.onStart=function(){}] - called on on start
-     * @param [callbacks.onEnd=function(){}] - called when unzipped is done
-     * @returns {Promise<boolean|FileError|Number>} - true if all has gone good, 403 if unathorized, FileError in case can write in the folder
-     * */
+/**
+ * download the game and unzip it
+ *
+ * @param {object} gameObject - The gameObject with the url of the html5game's zip
+ * @param {object} [callbacks={}] - an object with start-end-progress callbacks
+ * @param [callbacks.onProgress=function(){}] - a progress function filled with the percentage
+ * @param [callbacks.onStart=function(){}] - called on on start
+ * @param [callbacks.onEnd=function(){}] - called when unzipped is done
+ * @returns {Promise<boolean|FileError|Number>} - true if all has gone good, 403 if unathorized, FileError in case can write in the folder
+ * */
 Game.prototype.download = function(gameObject, callbacks){
-        // Clone object for security
+    // Clone object for security
     var self = this;
     gameObject = JSON.parse(JSON.stringify(gameObject));
     var err;
     if (this.isDownloading()){
-            err = { type: 'error', description: 'AlreadyDownloading' };
-            callbacks.onEnd(err);
-            return Promise.reject(err); 
-        }
+        err = { type: 'error', description: 'AlreadyDownloading' };
+        callbacks.onEnd(err);
+        return Promise.reject(err); 
+    }
         
     if ((!gameObject.hasOwnProperty('response_api_dld')) || gameObject.response_api_dld.status !== 200){
-            err = { type: 'error', description: 'response_api_dld.status not equal 200 or undefined' };
-            callbacks.onEnd(err);
-            return Promise.reject(err);
-        }
+        err = { type: 'error', description: 'response_api_dld.status not equal 200 or undefined' };
+        callbacks.onEnd(err);
+        return Promise.reject(err);
+    }
 
     var alreadyExists = this.isGameDownloaded(gameObject.id);
-        // Defaults
+    // Defaults
     callbacks = callbacks ? callbacks : {};
     var _onProgress = callbacks.onProgress ? callbacks.onProgress : function(){};
     var _onStart = callbacks.onStart ? callbacks.onStart : function(){};
     var _onEnd = callbacks.onEnd ? callbacks.onEnd : function(){};
 
-        /**
-         * Decorate progress function with percentage and type operation
-         */
+    /**
+     * Decorate progress function with percentage and type operation
+     */
     function wrapProgress(type){
-            return function(progressEvent){
-                // LOG.log(progressEvent);
-                var percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-                _onProgress({ percentage, type });
-            };
-        }       
+        return function(progressEvent){
+            // LOG.log(progressEvent);
+            var percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            _onProgress({ percentage, type });
+        };
+    }       
         
     var currentSize = gameObject.size.replace('KB', '').replace('MB', '').replace(',', '.').trim();
     var conversion = { KB: 1, MB: 2, GB: 3, TB: 5 };
-        // var isKB = gameObject.size.indexOf("KB") > -1 ? true : false;
+    // var isKB = gameObject.size.indexOf("KB") > -1 ? true : false;
     var isMB = gameObject.size.indexOf('MB') > -1 ? true : false;
     var bytes = currentSize * Math.pow(1024, isMB ? conversion.MB : conversion.KB);
         
     var saveAsName = gameObject.id;
     function start(){
-            _onStart({ type: 'download' });
-            var spaceEnough = fileModule.requestFileSystem(1, bytes);
-            LOG.log('Get ga_for_game and gamifive info, fly my minipony!');
-            return spaceEnough
+        _onStart({ type: 'download' });
+        var spaceEnough = fileModule.requestFileSystem(1, bytes);
+        LOG.log('Get ga_for_game and gamifive info, fly my minipony!');
+        return spaceEnough
                 .then(function(result){
                     LOG.info('Space is ok, can download:', bytes, result);
                     return storeOfflineData(saveAsName);
@@ -406,7 +389,7 @@ Game.prototype.download = function(gameObject, callbacks){
 
                     /**
                      * Modify gameObject.images.cover.ratio_1_4
-                     * it point to the cover image with cdvfile:// protocol
+                     * it points to the cover image with cdvfile:// protocol
                      * TODO: Build a system for file caching also for webapp
                      * **/
                     gameObject.images.cover.ratio_1 = coverResult.internalURL;
@@ -424,8 +407,6 @@ Game.prototype.download = function(gameObject, callbacks){
                         constants.GAMEOVER_RELATIVE_DIR + 'gameover.css',
                         constants.SDK_RELATIVE_DIR + 'cordova.js',
                         constants.SDK_RELATIVE_DIR + 'cordova_plugins.js',
-                        constants.SDK_RELATIVE_DIR + 'dixie.js',
-                        constants.SDK_RELATIVE_DIR + 'stargate.js',
                         constants.SDK_RELATIVE_DIR + 'gfsdk.min.js'
                     ]);
                 }).then(function(results){
@@ -440,34 +421,34 @@ Game.prototype.download = function(gameObject, callbacks){
                     _onEnd({ type: 'error', description: reason });
                     throw reason;
                 });
-        }
+    }
 
     return alreadyExists.then(function(exists){
-            LOG.log('Exists', exists);
-            if (exists){
-                downloading = false;
-                return Promise.reject({ 12: 'AlreadyExists', gameID: gameObject.id });
-            } else {
-                downloading = true;
-                return start();
-            }
-        });
+        LOG.log('Exists', exists);
+        if (exists){
+            downloading = false;
+            return Promise.reject({ 12: 'AlreadyExists', gameID: gameObject.id });
+        } else {
+            downloading = true;
+            return start();
+        }
+    });
 
 };
     
-    /**
-     * play
-     *
-     * @param {String} gameID - the game path in gamesDir where to look for. Note:the game is launched in the same webview
-     * @returns {Promise}
-     * */
+/**
+ * play
+ *
+ * @param {String} gameID - the game path in gamesDir where to look for. Note:the game is launched in the same webview
+ * @returns {Promise}
+ * */
 Game.prototype.play = function(gameID){
     LOG.log('Play', gameID);
-        /*
-         * TODO: check if games built with Construct2 has orientation issue
-         * attach this to orientationchange in the game index.html
-         * if(cr._sizeCanvas) window.cr_sizeCanvas(window.innerWidth, window.innerHeight)
-         */
+    /*
+    * TODO: check if games built with Construct2 has orientation issue
+    * attach this to orientationchange in the game index.html
+    * if(cr._sizeCanvas) window.cr_sizeCanvas(window.innerWidth, window.innerHeight)
+    */
     var gamedir = constants.GAMES_DIR + gameID;
     return fileModule.readDir(gamedir)
             .then(function(entries){
@@ -480,7 +461,7 @@ Game.prototype.play = function(gameID){
             .then(function(entry){
                 LOG.log('Playing this', entry);
                 var address = entry[0].internalURL + '?hybrid=1';
-                if (window.device.platform.toLowerCase() == 'ios'){
+                if (window.device.platform.toLowerCase() === 'ios'){
                     LOG.log('Play ios', address);
                     window.location.href = address;
                 } else {
@@ -491,12 +472,12 @@ Game.prototype.play = function(gameID){
             });
 };
 
-    /**
-     * Returns an Array of entries that match /index\.html$/i should be only one in the game directory
-     * @private
-     * @param {String} gameID
-     * @returns {Promise<Array|FileError>}
-     * */
+/**
+ * Returns an Array of entries that match /index\.html$/i should be only one in the game directory
+ * @private
+ * @param {String} gameID
+ * @returns {Promise<Array|FileError>}
+ * */
 function _getIndexHtmlById(gameID){
     LOG.log('_getIndexHtmlById', constants.GAMES_DIR + gameID);
     return fileModule.readDir(constants.GAMES_DIR + gameID)
@@ -508,35 +489,35 @@ function _getIndexHtmlById(gameID){
             });            
 }
 
-    /**
-     * removeRemoteSDK from game's dom
-     *
-     * @private
-     * @param {Document} dom - the document object
-     * @returns {Document} the cleaned document element
-     * */
+/**
+ * removeRemoteSDK from game's dom
+ *
+ * @private
+ * @param {Document} dom - the document object
+ * @returns {Document} the cleaned document element
+ * */
 function _removeRemoteSDK(dom){
     LOG.log('_removeRemoteSDK');
     var scripts = dom.querySelectorAll('script');
     var scriptTagSdk;
     for (var i = 0; i < scripts.length; i++){
-            if (scripts[i].src.indexOf('gfsdk') !== -1){
-                scriptTagSdk = scripts[i];
-                LOG.log('_removeRemoteSDK', scriptTagSdk);
-                scriptTagSdk.parentNode.removeChild(scriptTagSdk);
-                break;
-            }
+        if (scripts[i].src.indexOf('gfsdk') !== -1){
+            scriptTagSdk = scripts[i];
+            LOG.log('_removeRemoteSDK', scriptTagSdk);
+            scriptTagSdk.parentNode.removeChild(scriptTagSdk);
+            break;
         }
+    }
     return dom;
 }
 
-    /**
-     * _injectScriptsInDom
-     *
-     * @private
-     * @param {Document} dom - the document where to inject scripts
-     * @param {Array|String} sources - the src tag string or array of strings
-     * */
+/**
+ * _injectScriptsInDom
+ *
+ * @private
+ * @param {Document} dom - the document where to inject scripts
+ * @param {Array|String} sources - the src tag string or array of strings
+ * */
 function _injectScriptsInDom(dom, sources){
     dom = _removeRemoteSDK(dom);
     var _sources = Array.isArray(sources) === false ? [sources] : sources;
@@ -560,10 +541,10 @@ function _injectScriptsInDom(dom, sources){
             "style-src * cdvfile: http: https: 'unsafe-inline';";
     dom.head.insertBefore(metaTag, dom.getElementsByTagName('meta')[0]);
 
-        /**
-         *  Create a script element __root__
-         *  in case none script in head is present
-         * */
+    /**
+     *  Create a script element __root__
+     *  in case none script in head is present
+     * */
     var root = dom.createElement('script');
     root.id = '__root__';
     dom.head.insertBefore(root, dom.head.firstElementChild);
@@ -571,19 +552,19 @@ function _injectScriptsInDom(dom, sources){
     var scriptFragment = dom.createDocumentFragment();
 
     for (var i = 0; i < _sources.length; i++){
-            if (_sources[i].endsWith('.css')){
-                LOG.log('css inject:', _sources[i]);
-                css = dom.createElement('link');
-                css.rel = 'stylesheet';
-                css.href = _sources[i];
-                dom.head.insertBefore(css, dom.getElementsByTagName('link')[0]);
-            } else {
-                temp = dom.createElement('script');
-                temp.src = _sources[i];
-                scriptFragment.appendChild(temp);
-                // insertAfter(temp, root);
-            }
+        if (_sources[i].endsWith('.css')){
+            LOG.log('css inject:', _sources[i]);
+            css = dom.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = _sources[i];
+            dom.head.insertBefore(css, dom.getElementsByTagName('link')[0]);
+        } else {
+            temp = dom.createElement('script');
+            temp.src = _sources[i];
+            scriptFragment.appendChild(temp);
+            // insertAfter(temp, root);
         }
+    }
 
     dom.head.insertBefore(scriptFragment, dom.head.getElementsByTagName('script')[0]);
     LOG.log('Cleaned dom:', dom);
@@ -598,30 +579,30 @@ function removeOldGmenu(dom){
     var scripts = dom.querySelectorAll('script');
 
     for (var i = scripts.length - 1; i >= 0; i--){
-            if (scripts[i].innerHTML.indexOf('function open') !== -1){
-                toRemove.push(scripts[i]);
-                // scripts[i].parentNode.removeChild(scripts[i]);
-                break;
-            }
+        if (scripts[i].innerHTML.indexOf('function open') !== -1){
+            toRemove.push(scripts[i]);
+            // scripts[i].parentNode.removeChild(scripts[i]);
+            break;
         }
+    }
 
     for (var j = 0; j < toRemove.length; j++){
-            if (toRemove[j]){
-                toRemove[j].parentNode.removeChild(toRemove[j]);
-            }
+        if (toRemove[j]){
+            toRemove[j].parentNode.removeChild(toRemove[j]);
         }
+    }
 
     return dom;
 }
 
-    /**
-     * injectScripts in game index
-     *
-     * @private
-     * @param {String} gameID
-     * @param {Array} sources - array of src'string
-     * @returns {Promise<Object|FileError>}
-     * */
+/**
+ * injectScripts in game index
+ *
+ * @private
+ * @param {String} gameID
+ * @param {Array} sources - array of src'string
+ * @returns {Promise<Object|FileError>}
+ * */
 function injectScripts(gameID, sources){
     var indexPath;
     return _getIndexHtmlById(gameID)
@@ -677,13 +658,13 @@ function isIndexHtml(theString){
     return isIndex.test(theString);
 }
 
-    /**
-     * remove the game directory
-     *
-     * @public
-     * @param {String} gameID - the game id to delete on filesystem
-     * @returns {Promise<Array>}
-     * */
+/**
+ * remove the game directory
+ *
+ * @public
+ * @param {String} gameID - the game id to delete on filesystem
+ * @returns {Promise<Array>}
+ * */
 Game.prototype.remove = function(gameID){
     LOG.log('Removing game', gameID);
     var isCached = fileModule.dirExists(constants.CACHE_DIR + gameID + '.zip');
@@ -708,33 +689,32 @@ Game.prototype.remove = function(gameID){
             });
 };
 
-    /**
-     * isDownloading
-     *
-     * @public
-     * @returns {boolean}
-     * */
+/**
+ * isDownloading
+ *
+ * @public
+ * @returns {boolean}
+ * */
 Game.prototype.isDownloading = function(){
     return downloading;
 };
 
-    /**
-     * abortDownload
-     *
-     * @public
-     * @returns {boolean}
-     * */
+/**
+ * abortDownload
+ *
+ * @public
+ * @returns {boolean}
+ * */
 Game.prototype.abortDownload = function(){
     if (this.isDownloading()){
-            LOG.log('Abort last download');
-            if (fileModule.currentFileTransfer){
-                fileModule.currentFileTransfer.abort();
-                fileModule.currentFileTransfer = null;
-                downloading = false;
-            }
-
-            return true;
+        LOG.log('Abort last download');
+        if (fileModule.currentFileTransfer){
+            fileModule.currentFileTransfer.abort();
+            fileModule.currentFileTransfer = null;
+            downloading = false;
         }
+        return true;
+    }
     LOG.warn("There's not a download operation to abort");
     return false;
 };
@@ -767,42 +747,42 @@ Game.prototype.list = function(){
             });
 };
     
-    /**
-     * buildGameOver
-     * 
-     * @param {Object} datas - the data score, start, duration
-     * @param datas.score
-     * @param datas.start
-     * @param datas.duration
-     * @param datas.content_id
-     * @returns {Promise<String>} - The promise will be filled with the gameover html {String}     
-     */
-Game.prototype.buildGameOver = function(datas){                 
-    var metaJsonPath = constants.GAMES_DIR + datas.content_id + '/meta.json';
-        /** Check if content_id is here */
-    if (!datas.hasOwnProperty('content_id')){ return Promise.reject('Missing content_id key!'); }
+/**
+ * buildGameOver
+ * 
+ * @param {Object} datas - the data score, start, duration
+ * @param datas.score
+ * @param datas.start
+ * @param datas.duration
+ * @param datas.content_id
+ * @returns {Promise<String>} - The promise will be filled with the gameover html {String}     
+ */
+Game.prototype.buildGameOver = function(data){                 
+    var metaJsonPath = constants.GAMES_DIR + data.content_id + '/meta.json';
+    /** Check if content_id is here */
+    if (!data.hasOwnProperty('content_id')){ return Promise.reject('Missing content_id key!'); }
         
     LOG.log('Read meta.json:', metaJsonPath);
     LOG.log('GAMEOVER_TEMPLATE path', constants.GAMEOVER_DIR + 'gameover.html');
-        /** *
-         * if needed
-         * return new window.DOMParser().parseFromString(documentAsString, "text/xml").firstChild
-         * **/
+    /** *
+     * if needed
+     * return new window.DOMParser().parseFromString(documentAsString, "text/xml").firstChild
+     * **/
     return Promise.all([
-            fileModule.readFileAsJSON(metaJsonPath),
-            fileModule.readFile(constants.GAMEOVER_DIR + 'gameover.html')
-        ]).then(function(results){
-            var htmlString = results[1];
-            var metaJson = results[0];
-            LOG.info('Meta JSON:', metaJson);
-            return htmlString
-                    .replace('{{score}}', datas.score)
-                    .replace('{{game_title}}', metaJson.title)
-                    .replace('{{game_title}}', metaJson.title)
-                    .replace('{{url_share}}', metaJson.url_share)
-                    .replace('{{url_cover}}', metaJson.images.cover.ratio_1);
-                    // .replace("{{startpage_url}}", constants.WWW_DIR + "index.html");
-        });
+        fileModule.readFileAsJSON(metaJsonPath),
+        fileModule.readFile(constants.GAMEOVER_DIR + 'gameover.html')
+    ]).then(function(results){
+        var htmlString = results[1];
+        var metaJson = results[0];
+        LOG.info('Meta JSON:', metaJson);
+        return htmlString
+                .replace('{{score}}', data.score)
+                .replace('{{game_title}}', metaJson.title)
+                .replace('{{game_title}}', metaJson.title)
+                .replace('{{url_share}}', metaJson.url_share)
+                .replace('{{url_cover}}', metaJson.images.cover.ratio_1);
+                // .replace("{{startpage_url}}", constants.WWW_DIR + "index.html");
+    });
 };
 
 /**
@@ -822,81 +802,81 @@ Game.prototype.isGameDownloaded = function(gameID){
  * */
 Game.prototype.removeAll = function(){
     return fileModule.removeDir(constants.GAMES_DIR)
-            .then(function(result){
-                LOG.log('All games deleted!', result);
-                return fileModule.createDir(constants.BASE_DIR, 'games');
-            });
+        .then(function(result){
+            LOG.log('All games deleted!', result);
+            return fileModule.createDir(constants.BASE_DIR, 'games');
+        });
 };
 
-    /**
-     * downloadImage
-     * Save the image in games/<gameId>/images/<type>/<size.width>x<size.height>.png
-     *
-     * @param {String} info -
-     * @param {String} info.gameId -
-     * @param {Object} info.size -
-     * @param {String|Number} info.size.width -
-     * @param {String|Number} info.size.height -
-     * @param {String|Number} info.size.ratio - 1|2|1_5|1_4
-     * @param {String} info.url - the url with the [HSIZE] and [WSIZE] in it
-     * @param {String} info.type - possible values cover|screenshot|icon
-     * @param {String} info.method - possible values "xhr"
-     * @returns {Promise<String|FileTransferError>} where string is the cdvfile:// path
-     * */
+/**
+ * downloadImage
+ * Save the image in games/<gameId>/images/<type>/<size.width>x<size.height>.png
+ *
+ * @param {String} info -
+ * @param {String} info.gameId -
+ * @param {Object} info.size -
+ * @param {String|Number} info.size.width -
+ * @param {String|Number} info.size.height -
+ * @param {String|Number} info.size.ratio - 1|2|1_5|1_4
+ * @param {String} info.url - the url with the [HSIZE] and [WSIZE] in it
+ * @param {String} info.type - possible values cover|screenshot|icon
+ * @param {String} info.method - possible values "xhr"
+ * @returns {Promise<String|FileTransferError>} where string is the cdvfile:// path
+ * */
 function downloadImage(info){
-        /* info = {
-            gameId:"",
-            size:{width:"",height:"",ratio:""},
-            url:"",
-            type:"cover",
-            method:"xhr"
-        };*/
+    /* info = {
+        gameId:"",
+        size:{width:"",height:"",ratio:""},
+        url:"",
+        type:"cover",
+        method:"xhr"
+    };*/
 
-        // GET COVER IMAGE FOR THE GAME!
+    // GET COVER IMAGE FOR THE GAME!
     var toDld = info.url
             .replace('[WSIZE]', info.size.width)
             .replace('[HSIZE]', info.size.height)
             .split('?')[0];
 
-        // toDld = "http://lorempixel.com/g/"+info.size.width+"/"+info.size.height+"/";
-        // toDld = encodeURI(toDld);
+    // toDld = "http://lorempixel.com/g/"+info.size.width+"/"+info.size.height+"/";
+    // toDld = encodeURI(toDld);
 
     var gameFolder = constants.GAMES_DIR + info.gameId;
-        // var imagesFolder = gameFolder + "/images/" + info.type + "/";
+    // var imagesFolder = gameFolder + "/images/" + info.type + "/";
     var imageName = info.type + '_' + info.size.width + 'x' + info.size.height + ('_' + info.size.ratio || '') + '.jpeg';
     LOG.log('request Image to', toDld, 'coverImageUrl', imageName, 'imagesFolder', gameFolder);
     if (info.method === 'xhr'){
-            return Promise.all([
+        return Promise.all([
                 fileModule.createFile(gameFolder, imageName),
-                Utils.getImageRaw({ url: toDld })
+                getImageRaw({ url: toDld })
             ]).then(function(results){
                 var entry = results[0];
                 var blob = results[1];
 
                 return fileModule.appendToFile(entry.path, blob, true, 'image/jpeg');
             });
-        } else {
-            return new fileModule.download(toDld, gameFolder, imageName, function(){}).promise;
-        }
+    } else {
+        return new fileModule.download(toDld, gameFolder, imageName, function(){}).promise;
+    }
 }
 
-    /**
-     * getBundleObjects
-     *
-     * make the jsonpRequests to get the gameObjects.
-     * This method is called only if configuration key "bundle_games" is set with an array of gameIDs
-     *
-     * @returns {Promise<Array>} the gameObject with response_api_dld key
-     * */
+/**
+ * getBundleObjects
+ *
+ * make the jsonpRequests to get the gameObjects.
+ * This method is called only if configuration key "bundle_games" is set with an array of gameIDs
+ *
+ * @returns {Promise<Array>} the gameObject with response_api_dld key
+ * */
 Game.prototype.getBundleGameObjects = function(){
     var self = this;
     if (CONF.bundle_games.length > 0){
-            LOG.log('Games bundle in configuration', CONF.bundle_games);
-            var whichGameAlreadyHere = CONF.bundle_games.map(function(gameId){
+        LOG.log('Games bundle in configuration', CONF.bundle_games);
+        var whichGameAlreadyHere = CONF.bundle_games.map(function(gameId){
                 return self.isGameDownloaded(gameId);
             });
 
-            var filteredToDownload = Promise.all(whichGameAlreadyHere)
+        var filteredToDownload = Promise.all(whichGameAlreadyHere)
                 .then(function(results){
                     LOG.log('alreadyDownloaded', results);
                     for (var i = 0; i < results.length; i++){
@@ -908,8 +888,8 @@ Game.prototype.getBundleGameObjects = function(){
                     return bundlesGamesIds.join(',');
                 });
 
-            var tmpBundleGameObjects;
-            return filteredToDownload
+        var tmpBundleGameObjects;
+        return filteredToDownload
                 .then(function(bundleGamesIds){
 
                     obj.content_id = bundleGamesIds;
@@ -940,25 +920,25 @@ Game.prototype.getBundleGameObjects = function(){
                 .catch(function(reason){
                     LOG.error('Games bundle meta fail:', reason);
                 });
-        } else {
-            LOG.warn('Bundle_games array is empty!');
-            return Promise.reject('bundle_games array is empty!');
-        }
+    } else {
+        LOG.warn('Bundle_games array is empty!');
+        return Promise.reject('bundle_games array is empty!');
+    }
 };
 
-    /**
-     * needsUpdate
-     * checks if there's or not a new version for the game(it makes a call to the api)
-     *
-     * @param {String} gameId - the gameId
-     * @param {Promise<Boolean>}
-     * */
+/**
+ * needsUpdate
+ * checks if there's or not a new version for the game(it makes a call to the api)
+ *
+ * @param {String} gameId - the gameId
+ * @param {Promise<Boolean>}
+ * */
 Game.prototype.needsUpdate = function(gameId){
     var oldMd5 = '';
     return fileModule.readFileAsJSON(constants.GAMES_DIR + gameId + '/meta.json')
             .then(function(gameObject){
                 oldMd5 = gameObject.response_api_dld.binary_md5;
-                return Utils.getJSON(gameObject.url_api_dld);
+                return getJSON(gameObject.url_api_dld);
             })
             .then(function(response){
                 if (response.status === 200){
@@ -975,23 +955,25 @@ function readUserJson(){
 }
 
 function storeOfflineData(content_id){
-        /**
-         * Calls for offlineData.json
-         * putting GamifiveInfo and GaForGame in this file for each game
-         * {
-         *  GaForGame:<content_id>:{<ga_for_game>},
-         *  GamifiveInfo:<content_id>:{<gamifive_info>},
-         *  queues:{}
-         * }
-         * */
-    var apiGaForGames = queryfy(CONF.ga_for_game_url, ga_for_games_qs);
-    var getGaForGamesTask = new JSONPRequest(apiGaForGames).prom;
+    /**
+     * Calls for offlineData.json
+     * putting GamifiveInfo and GaForGame in this file for each game
+     * {
+     *  GaForGame:<content_id>:{<ga_for_game>},
+     *  GamifiveInfo:<content_id>:{<gamifive_info>},
+     *  queues:{}
+     * }
+     * */
+    // TODO: delete ga_for_game
+    // and relative pony (it's in the user check now)
         
-    var tasks = Promise.all([getGaForGamesTask, readUserJson()]);
+    var tasks = Promise.all([
+        readUserJson() 
+    ]);
 
-    return tasks.then(function(results){
-            var ga_for_game = results[0];
-            var userJson = results[1];
+    return tasks
+        .then(function(result){
+            var userJson = result;
 
             if (!userJson.ponyUrl){
                 LOG.warn('ponyUrl in user check undefined!', userJson.ponyUrl);
@@ -1000,22 +982,21 @@ function storeOfflineData(content_id){
 
             var _PONYVALUE = userJson.ponyUrl.split('&_PONY=')[1];
             LOG.log('PONYVALUE', _PONYVALUE);
-            LOG.log('apiGaForGames:', apiGaForGames, 'ga_for_game:', ga_for_game);
-            
+
             var gamifive_api = queryfy(CONF.gamifive_info_api, {
                 content_id,                
                 format: 'jsonp'
             });
-
             gamifive_api += userJson.ponyUrl;
 
             LOG.log('gamifive_info_api', gamifive_api);
-            return [new JSONPRequest(gamifive_api).prom, ga_for_game];
+            return [new JSONPRequest(gamifive_api).prom];
 
-        }).then(function(results){
-            return results[0].then(function(gamifive_info){
-                LOG.log('gamifiveInfo:', gamifive_info, 'ga_for_game', results[1]);
-                return updateOfflineData({ content_id, ga_for_game: results[1], gamifive_info: gamifive_info.game_info });
+        })
+        .then(function(result){
+            return result.then(function(gamifive_info){
+                LOG.log('gamifiveInfo:', gamifive_info);
+                return updateOfflineData({ content_id, gamifive_info: gamifive_info.game_info });
             });
         });
 }
@@ -1023,7 +1004,6 @@ function storeOfflineData(content_id){
 function updateOfflineData(object){
     return fileModule.readFileAsJSON(constants.BASE_DIR + 'offlineData.json')
             .then(function(offlineData){
-                offlineData.GaForGame[object.content_id] = object.ga_for_game;
                 offlineData.GamifiveInfo[object.content_id] = object.gamifive_info;
                 return offlineData;
             })
