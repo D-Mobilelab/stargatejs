@@ -283,6 +283,20 @@ function getWebappOrigin() {
     }
 }
 
+/**
+ * getCountryCode
+ * return the country in the manifest code ww-it, fr, ecc
+ * 
+ * @returns {string}
+ */
+function getCountryCode() {
+    if (typeof STARGATE_MANIFEST.stargateConf.country_code !== 'undefined'){
+        return STARGATE_MANIFEST.stargateConf.country_code;
+    } else {
+        return '';
+    }
+}
+
 
 /**
  * loadUrl loads and url in the cordova webview. 

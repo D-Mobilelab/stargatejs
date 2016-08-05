@@ -22,6 +22,7 @@
     "stargateConf": {
         "title": "Gameasy",
         "webapp_start_url": "http://www2.gameasy.com/",
+        "country_code":"ww-it",
         "stargate_version_to_load": "4",
 
         "billing_key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgsZXbOOwc3bES1iJkh3GVZJIYl9MQ8ycMQLG6a0jVwwFLY/Ntr+PS6YrrTSrLjX+SX35nPaALfy8buce3qh1cfcQO5g8ocwyjII1NBVavKjGwXcAJT9AjoD53uATvBfx6LZTjTKc/N4HoKHdNeSWkJIip9ZtP6NIDWcpnBjVZGX/cyDNnI9fF9z75kGQOWprzFeMR5+IyzDcAcEs6xp3e9x3i0U+LtBthatK4wpi3sRMxlUNAz7dE4nEPVdDEpy2VdI9n1FDFGw0X7amLVQ8aqKWj5z84ZoJaA1dSHnWlEkDzXSNJLzktLE5cPErBkTfYh2Ps+0WV2j3bDX4IMbHFwIDAQAB",
