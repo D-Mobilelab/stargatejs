@@ -6,7 +6,8 @@ var queryfy = require('./modules/Utils').queryfy;
 var getType = require('./modules/Utils').getType;
 
 var requireCondition = require('./modules/Decorators').requireCondition;
-var Facebook = require('./modules/Facebook');
+var FacebookClass = require('./modules/Facebook');
+var Facebook = new FacebookClass();
 var version = require('./info').version;
 var build = require('./info').build;
 
@@ -347,7 +348,8 @@ function goToWebIndex(){
 var Stargate = {
     initialize,
     getVersion,
-    getVersionBuild,    
+    getVersionBuild, 
+    getCountryCode,   
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
     addListener: requireCondition(isInitialized, 
