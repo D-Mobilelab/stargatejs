@@ -1,5 +1,6 @@
 var cookies = require('cookies-js');
 var Stargate = require('../src/index');
+var API_URL_NET_INFO = require('../src/modules/Constants').API_URL_NET_INFO;
 var simulateEvent = require('./helpers/SimulateEvent');
 var cordovaMock = require('./helpers/cordova');
 var fileMock = require('./helpers/cordova-plugin-file');
@@ -7,39 +8,44 @@ var unzipMock = require('./helpers/cordova-plugin-unzip');
 var deviceMock = require('./helpers/cordova-plugin-device');
 var utils = require('./helpers/utilities');
 var manifestJSON = require('./helpers/manifest');
-// Used to replace-mock window in some cases   
-var ctx = {
-    document: {
-        location: {
-            href: 'http://mockit.com/?hybrid=1&stargateVersion=4',
-            protocol: 'http:'
-        }
-    }
-};
 
-describe('Stargate public interface tests 1', () => {
+require('jasmine-ajax');
+
+describe('Stargate public interface tests no hybrid', () => {
 
     beforeAll(() => {
-        // jasmine.clock().install();
+        window.fakewindow = {
+            document: {
+                location: {
+                    href: 'http://www.gameasy.com/?hybrid=1&stargateVersion=4',
+                    protocol: 'http:'
+                }
+            }
+        };
     });
 
     afterAll(() => {
-        // jasmine.clock().uninstall();
+        window.fakewindow = null;
     });
 
     beforeEach(() => {
+        jasmine.Ajax.install();
         cordovaMock.install(2); // deviceready event after 2000ms
     });
 
     afterEach(() => {             
         cordovaMock.uninstall();
         Stargate.__deinit__();
+        Stargate.unsetMock('isHybrid');
+        Stargate.unsetMock('netInfoIstance');
+        Stargate.unsetMock('JSONPRequest');
+        jasmine.Ajax.uninstall();
     });
 
     it('Initialize hybrid but deviceready after 2 seconds', (done) => {              
         var resolvedInit = jasmine.createSpy('resolvedInit');
         var SG_CONF = { DEVICE_READY_TIMEOUT: 500 };
-        expect(Stargate.isHybrid(ctx)).toEqual(true);        
+        expect(Stargate.isHybrid()).toEqual(true);        
 
         Stargate.initialize(SG_CONF)
         .then((results) => {
@@ -53,9 +59,84 @@ describe('Stargate public interface tests 1', () => {
             done();
         });    
     });
+
+    it('Stargate.getInfo hybrid false, offline false', (done) => {
+
+        Stargate.setMock('isHybrid', () => false);
+
+        Stargate.setMock('netInfoIstance', {
+            initialize: function(){},
+            checkConnection: function(){
+                return { type: 'offline', networkState: 'none' };
+            }
+        });
+
+        Stargate.initialize().then(() => Stargate.getInfo())
+        .then((info) => {
+            
+            expect(info).toBeDefined();
+            expect(info).toEqual({});
+            done();
+        });
+    });
+
+    it('Stargate.getInfo hybrid false, online true', (done) => {
+        Stargate.setMock('isHybrid', () => false);
+
+        Stargate.setMock('netInfoIstance', {
+            initialize: function(){},
+            checkConnection: function(){
+                return { type: 'online', networkState: 'none' };
+            }
+        });
+
+        function JSONPRequestMock(){
+            this.prom = Promise.resolve({
+                response: {
+                    realIp: '213.213.84.212',
+                    realCountry: 'it',
+                    throughput: 'vhigh',
+                    bandwidth: '5000',
+                    network: 'bt',
+                    networkType: '',
+                    worldwide: '1',
+                    country: 'xx',
+                    domain: 'http://www2.gameasy.com/ww-it/'
+                }
+            });
+        }
+        Stargate.setMock('JSONPRequest', JSONPRequestMock);
+
+        Stargate.initialize()
+            .then(Stargate.getInfo)
+            .then((info) => {
+            
+                expect(info).toBeDefined();
+                expect(info.realCountry).toEqual('it');
+                expect(info.domain).toEqual('http://www2.gameasy.com/ww-it/');
+                expect(Stargate.getDomainWithCountry()).toEqual('http://www2.gameasy.com/ww-it/');
+                expect(info.country).toEqual('xx');
+                done();
+            });
+    });
 });
 
-describe('Stargate public interface tests 2', () => {
+describe('Stargate public interface tests hybrid', () => {
+
+    beforeAll(() => {
+        window.fakewindow = {
+            document: {
+                location: {
+                    href: 'http://www.gameasy.com/?hybrid=1&stargateVersion=4',
+                    protocol: 'http:'
+                }
+            }
+        };
+    });
+
+    afterAll(() => {
+        window.fakewindow = null;
+    });
 
     beforeEach((done) => {
         cordovaMock.install(3);
@@ -80,18 +161,21 @@ describe('Stargate public interface tests 2', () => {
     });
 
     it('Test isHybrid false', () => {
+        var prev = window.fakewindow.document.location.href;
+        window.fakewindow.document.location.href = 'http://www.gameasy.com/!#/';
         expect(Stargate.isHybrid()).toEqual(false);
+        window.fakewindow.document.location.href = prev;
     });
 
     it('Test isHybrid true', () => {
-        
-        expect(Stargate.isHybrid(ctx)).toEqual(true);
+
+        expect(Stargate.isHybrid()).toEqual(true);
         expect(cookies.get('hybrid')).toEqual('1');
         expect(localStorage.getItem('hybrid')).toEqual('1');
-
     });
 
     it('Initialize hybrid should wait deviceready', (done) => {
+        var filepath = '';
         expect(window.cordova.file).toBeDefined();
         
         // Create directory and manifest.json
@@ -100,20 +184,24 @@ describe('Stargate public interface tests 2', () => {
             utils.createFileWithContent(dirEntry.toURL(), 
                             'manifest.json', 
                             JSON.stringify(manifestJSON))
-        )
-        .then((results) => {
-            console.log('Manifest:', results);
+        ).then((results) => {
+            filepath = results.toURL();
+            var dir = filepath.split('www')[0];
+            window.cordova.file.applicationDirectory = dir;
+
+            console.log('Manifest:', results, filepath, dir);
             localStorage.setItem('hybrid', 1);
             
-            Stargate.initialize().then((results) => {                
-                expect(results).toBeDefined();
-                utils.removeFile(window.cordova.file.applicationStorageDirectory + 'www/manifest.json');
+            Stargate.initialize().then((_results) => {                
+                expect(_results).toBeDefined();
                 expect(Stargate.getWebappStartUrl()).toEqual('http://www2.gameasy.com/?hybrid=1&stargateVersion=4');
-                expect(Stargate.getWebappOrigin()).toEqual('http://www2.gameasy.com');          
+                expect(Stargate.getWebappOrigin()).toEqual('http://www2.gameasy.com');
+                utils.removeFile(filepath);                 
                 done(); 
             }).catch((reason) => {
-                console.error(reason);
-                utils.removeFile(window.cordova.file.applicationStorageDirectory + 'www/manifest.json');
+                console.log(reason);
+                expect(reason).not.toBeDefined();
+                utils.removeFile(filepath);
                 done();                    
             });
         });       
