@@ -311,9 +311,10 @@ function getInfo() {
         return Promise.resolve(NET_INFO);
     }
 
+    var url = queryfy(API_URL_NET_INFO, { format: 'jsonp' });
     // online? get it and save it if hybrid
     if (netInfoIstance.checkConnection().type === 'online'){
-        return new JSONPRequest(API_URL_NET_INFO, 5000).prom.then((resp) => {
+        return new JSONPRequest(url, 5000).prom.then((resp) => {
             NET_INFO = resp.response;
             if (isHybrid()){
                 Logger.log('Saving response:', resp.response);
