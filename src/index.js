@@ -4,6 +4,10 @@ var extend = require('./modules/Utils').extend;
 var dequeryfy = require('./modules/Utils').dequeryfy;
 var queryfy = require('./modules/Utils').queryfy;
 var getType = require('./modules/Utils').getType;
+var JSONPRequest = require('http-francis').JSONPRequest;
+// var Http = require('http-francis').Http;
+const API_URL_NET_INFO = require('./modules/Constants').API_URL_NET_INFO;
+var NET_INFO = {};
 
 var requireCondition = require('./modules/Decorators').requireCondition;
 var FacebookClass = require('./modules/Facebook');
@@ -49,10 +53,10 @@ function initialize(configuration = {}, callback = function(){}){
         LOG.warn('Initialized already called');
         return initPromise; 
     }
-    
+
     CUSTOM_CONF = extend(DEFAULT_CONFIGURATION, configuration);
-    
-    // if isHybrid wait deviceready otherwise just call init 
+
+    // if isHybrid wait deviceready otherwise just call init    
     if (isHybrid()) {
         LOG.info('Hybrid init');
         initPromise = new Promise((resolve, reject) => {
@@ -94,9 +98,9 @@ function initialize(configuration = {}, callback = function(){}){
     
     return initPromise.then((results) => {
         initialized = true;
-        isStargateOpen = true;
+        isStargateOpen = true;              
         return results;
-    });    
+    });
 }
 
 /**
@@ -160,17 +164,16 @@ function isInitialized(){
 /**
  * Check if stargate is running in hybrid environment: 
  * in order:check the protocol, check cookie if any, localStorage if any
- * @param {Object} ctx - only for testing purporse
  * @static
  * @returns {Boolean}
  */
-function isHybrid(ctx){
+function isHybrid(){
     
     // Check url for hybrid query param
     
     var location = window.document.location;
-    if (ctx) { 
-        location = ctx.document.location;
+    if (process.env.NODE_ENV === 'development' && window.fakewindow) { 
+        location = window.fakewindow.document.location;
     }
     var uri = location.href;
     var queryStringObject = dequeryfy(uri);
@@ -285,19 +288,56 @@ function getWebappOrigin() {
 }
 
 /**
- * getCountryCode
- * return the country in the manifest code ww-it, fr, ecc
- * 
- * @returns {string}
- */
-function getCountryCode() {
-    if (typeof STARGATE_MANIFEST.stargateConf.country_code !== 'undefined'){
-        return STARGATE_MANIFEST.stargateConf.country_code;
-    } else {
-        return '';
+ * getInfo
+ * returns somenthing like that
+ * <pre>
+ * {
+    realIp: "213.213.84.212",
+    realCountry: "it",
+    throughput: "vhigh",
+    bandwidth: "5000",
+    network: "bt",
+    networkType: "",
+    worldwide: "1",
+    country: "xx",
+    domain: "http://www2.gameasy.com/ww-it/"
     }
+ *</pre>
+ * @returns {Promise<Object>}
+ */
+function getInfo() {
+    
+    if (Object.getOwnPropertyNames(NET_INFO).length > 0){
+        return Promise.resolve(NET_INFO);
+    }
+
+    // online? get it and save it if hybrid
+    if (netInfoIstance.checkConnection().type === 'online'){
+        return new JSONPRequest(API_URL_NET_INFO, 5000).prom.then((resp) => {
+            NET_INFO = resp.response;
+            if (isHybrid()){
+                Logger.log('Saving response:', resp.response);
+                // Save it but don't wait to finish
+                fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(resp.response));                            
+            }
+            return resp.response;
+        });
+    // offline? if hybrid read it from file
+    } else {
+        if (isHybrid()){
+            return fileModule.readFileAsJSON([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'));
+        }
+        return Promise.resolve(NET_INFO);
+    }    
 }
 
+function getDomainWithCountry(){
+    if (NET_INFO.domain) {
+        return NET_INFO.domain;
+    }
+    Logger.warn('Can\'t get the domain. have you called Stargate.getInfo first ?');
+    return '';
+}
 
 /**
  * loadUrl loads and url in the cordova webview. 
@@ -349,7 +389,8 @@ var Stargate = {
     initialize,
     getVersion,
     getVersionBuild, 
-    getCountryCode,   
+    getInfo,
+    getDomainWithCountry,   
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
     addListener: requireCondition(isInitialized, 
@@ -389,6 +430,57 @@ if (process.env.NODE_ENV === 'development') {
         cookies.expire('hybrid');
         cookies.expire('stargateVersion');
     };
+    
+    var original = {};
+    
+    Stargate.setMock = function (moduleName, mock){
+        switch(moduleName){
+            case 'fileModule':
+                original.fileModule = fileModule;
+                fileModule = mock;
+                break;
+            case 'isHybrid':
+                original.isHybrid = isHybrid;
+                isHybrid = mock;
+                break;
+            case 'netInfoIstance':
+                original.netInfoIstance = netInfoIstance;
+                netInfoIstance = mock;
+                break;
+            case 'JSONPRequest':
+                original.JSONPRequest = JSONPRequest;
+                JSONPRequest = mock;
+                break;
+            default:
+                console.log('No mock rule for ' + moduleName);
+                break;
+        }
+    };
+
+    Stargate.unsetMock = function(moduleName){
+        if (!original[moduleName]) return;
+            switch(moduleName){
+                case 'fileModule':
+                    fileModule = original.fileModule;
+                    original.fileModule = null;
+                    break;
+                case 'isHybrid':
+                    isHybrid = original.isHybrid;
+                    original.isHybrid = null;
+                    break;
+                case 'netInfoIstance':
+                    netInfoIstance = original.netInfoIstance;
+                    original.netInfoIstance = null;
+                    break;
+                case 'JSONPRequest':
+                    JSONPRequest = original.JSONPRequest;
+                    original.JSONPRequest = null;
+                    break;
+                default:
+                    return;
+                    break;
+            }
+    }
 }
 
 export default Stargate;
