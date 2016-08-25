@@ -81,13 +81,15 @@ function initialize(configuration = {}, callback = function(){}){
             netInfoIstance.initialize();
                       
             return Promise.all(modulesLoaded);          
-        }).then((results) => {
+        })
+        .then((results) => {
             
             // get the manifest and return the results without it
             STARGATE_MANIFEST = results.shift();// here we have the manifest            
             callback(results);            
             return results;            
-        });
+        })
+        .then(getInfo);
         
     } else {
         LOG.info('No hybrid init');
@@ -306,7 +308,7 @@ function getWebappOrigin() {
  * @returns {Promise<Object>}
  */
 function getInfo() {
-    
+    var countryCodeRegex = /(http:\/\/[\w]{3,4}\..*\.[\w]{2,})\/(.*)\//;
     if (Object.getOwnPropertyNames(NET_INFO).length > 0){
         return Promise.resolve(NET_INFO);
     }
@@ -315,12 +317,17 @@ function getInfo() {
     if (netInfoIstance.checkConnection().type === 'online'){
         return new JSONPRequest(url, 5000).prom.then((resp) => {
             NET_INFO = resp;
+            var splitted = NET_INFO.domain.match(countryCodeRegex);
+
+            NET_INFO.domain = splitted[1];
+            NET_INFO.countryCode = splitted[2];
+
             if (isHybrid()){
-                LOG.log('Saving response:', resp);
+                LOG.log('Saving response:', NET_INFO);
                 // Save it but don't wait to finish
                 fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(NET_INFO));                            
             }
-            return resp;
+            return NET_INFO;
         });
     // offline? if hybrid read it from file
     } else {
@@ -331,9 +338,14 @@ function getInfo() {
     }    
 }
 
-function getDomainWithCountry(){
-    if (NET_INFO.domain) {
-        return NET_INFO.domain;
+/**
+ * Get the country code loaded by getInfo call
+ * @sync
+ * @returns {String}
+ */
+function getCountryCode(){
+    if (NET_INFO.countryCode) {
+        return NET_INFO.countryCode;
     }
     LOG.warn('Can\'t get the domain. have you called Stargate.getInfo first ?');
     return '';
@@ -390,7 +402,7 @@ var Stargate = {
     getVersion,
     getVersionBuild, 
     getInfo,
-    getDomainWithCountry,   
+    getCountryCode,   
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
     addListener: requireCondition(isInitialized, 

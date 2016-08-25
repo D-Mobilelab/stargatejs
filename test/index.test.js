@@ -40,6 +40,7 @@ describe('Stargate public interface tests no hybrid', () => {
         Stargate.unsetMock('netInfoIstance');
         Stargate.unsetMock('JSONPRequest');
         Stargate.unsetMock('getWebappOrigin');
+        Stargate.unsetMock('fileModule');
         jasmine.Ajax.uninstall();
     });
 
@@ -61,34 +62,9 @@ describe('Stargate public interface tests no hybrid', () => {
         });    
     });
 
-    it('Stargate.getInfo hybrid false, offline false', (done) => {
-
-        Stargate.setMock('isHybrid', () => false);
-
-        Stargate.setMock('netInfoIstance', {
-            initialize: function(){},
-            checkConnection: function(){
-                return { type: 'offline', networkState: 'none' };
-            }
-        });
-
-        Stargate.setMock('getWebappOrigin', function(){
-            return 'http://www2.gameasy.com';
-        });
-
-        Stargate.initialize()
-        .then(() => Stargate.getInfo())
-        .then((info) => {
-            
-            expect(info).toBeDefined();
-            expect(info).toEqual({});
-            done();
-        });
-    });
-
-    it('Stargate.getInfo hybrid false, online true', (done) => {
+    it('Stargate.getInfo hybrid true, online true', (done) => {
         
-        Stargate.setMock('isHybrid', () => false);
+        Stargate.setMock('isHybrid', () => true);
 
         Stargate.setMock('netInfoIstance', {
             initialize: function(){},
@@ -99,6 +75,16 @@ describe('Stargate public interface tests no hybrid', () => {
         
         Stargate.setMock('getWebappOrigin', function(){
             return 'http://www2.gameasy.com';
+        });
+
+        Stargate.setMock('fileModule', {
+            write: function(){
+                console.log('Write:', arguments);
+            },
+            readFileAsJSON: function(){
+                console.log('readFileAsJSON:', arguments);
+                return Promise.resolve({});
+            }
         });
 
         function JSONPRequestMock(){
@@ -117,15 +103,14 @@ describe('Stargate public interface tests no hybrid', () => {
         }
         Stargate.setMock('JSONPRequest', JSONPRequestMock);
 
-        Stargate.initialize()
-            .then(Stargate.getInfo)
-            .then((info) => {
-            
-                expect(info).toBeDefined();
-                expect(info.realCountry).toEqual('it');
-                expect(info.domain).toEqual('http://www2.gameasy.com/ww-it/');
-                expect(Stargate.getDomainWithCountry()).toEqual('http://www2.gameasy.com/ww-it/');
-                expect(info.country).toEqual('xx');
+        Stargate.initialize()            
+            .then(() => {
+                expect(Stargate.getCountryCode()).toEqual('ww-it');
+                // call it after initialize should return immediately
+                Stargate.getInfo().then((resp) => {
+                    expect(resp.domain).toEqual('http://www2.gameasy.com');
+                    expect(resp.countryCode).toEqual('ww-it');
+                });
                 done();
             });
     });
