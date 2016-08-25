@@ -314,13 +314,13 @@ function getInfo() {
     // online? get it and save it if hybrid
     if (netInfoIstance.checkConnection().type === 'online'){
         return new JSONPRequest(url, 5000).prom.then((resp) => {
-            NET_INFO = resp.response;
+            NET_INFO = resp;
             if (isHybrid()){
-                LOG.log('Saving response:', resp.response);
+                LOG.log('Saving response:', resp);
                 // Save it but don't wait to finish
-                fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(resp.response));                            
+                fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(NET_INFO));                            
             }
-            return resp.response;
+            return resp;
         });
     // offline? if hybrid read it from file
     } else {

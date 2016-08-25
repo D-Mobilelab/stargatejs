@@ -103,8 +103,7 @@ describe('Stargate public interface tests no hybrid', () => {
 
         function JSONPRequestMock(){
             console.log(arguments);
-            this.prom = Promise.resolve({
-                response: {
+            this.prom = Promise.resolve({                
                     realIp: '213.213.84.212',
                     realCountry: 'it',
                     throughput: 'vhigh',
@@ -113,8 +112,7 @@ describe('Stargate public interface tests no hybrid', () => {
                     networkType: '',
                     worldwide: '1',
                     country: 'xx',
-                    domain: 'http://www2.gameasy.com/ww-it/'
-                }
+                    domain: 'http://www2.gameasy.com/ww-it/'                
             });
         }
         Stargate.setMock('JSONPRequest', JSONPRequestMock);
