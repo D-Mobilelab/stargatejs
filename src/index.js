@@ -317,7 +317,7 @@ function getInfo() {
         return new JSONPRequest(url, 5000).prom.then((resp) => {
             NET_INFO = resp.response;
             if (isHybrid()){
-                Logger.log('Saving response:', resp.response);
+                LOG.log('Saving response:', resp.response);
                 // Save it but don't wait to finish
                 fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(resp.response));                            
             }
