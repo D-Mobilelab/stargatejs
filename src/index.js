@@ -310,8 +310,7 @@ function getInfo() {
     if (Object.getOwnPropertyNames(NET_INFO).length > 0){
         return Promise.resolve(NET_INFO);
     }
-
-    var url = queryfy(API_URL_NET_INFO, { format: 'jsonp' });
+    var url = queryfy([getWebappOrigin(), API_URL_NET_INFO].join(''), { format: 'jsonp' });
     // online? get it and save it if hybrid
     if (netInfoIstance.checkConnection().type === 'online'){
         return new JSONPRequest(url, 5000).prom.then((resp) => {
@@ -452,6 +451,10 @@ if (process.env.NODE_ENV === 'development') {
                 original.JSONPRequest = JSONPRequest;
                 JSONPRequest = mock;
                 break;
+            case 'getWebappOrigin':
+                original.getWebappOrigin = getWebappOrigin;
+                getWebappOrigin = mock;
+                break;
             default:
                 console.log('No mock rule for ' + moduleName);
                 break;
@@ -477,6 +480,10 @@ if (process.env.NODE_ENV === 'development') {
                     JSONPRequest = original.JSONPRequest;
                     original.JSONPRequest = null;
                     break;
+                case 'getWebappOrigin':
+                    getWebappOrigin = original.getWebappOrigin;
+                    original.getWebappOrigin = null;
+                    break;                
                 default:
                     return;
                     break;

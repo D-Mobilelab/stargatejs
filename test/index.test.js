@@ -21,7 +21,7 @@ describe('Stargate public interface tests no hybrid', () => {
                     protocol: 'http:'
                 }
             }
-        };
+        };        
     });
 
     afterAll(() => {
@@ -39,6 +39,7 @@ describe('Stargate public interface tests no hybrid', () => {
         Stargate.unsetMock('isHybrid');
         Stargate.unsetMock('netInfoIstance');
         Stargate.unsetMock('JSONPRequest');
+        Stargate.unsetMock('getWebappOrigin');
         jasmine.Ajax.uninstall();
     });
 
@@ -71,7 +72,12 @@ describe('Stargate public interface tests no hybrid', () => {
             }
         });
 
-        Stargate.initialize().then(() => Stargate.getInfo())
+        Stargate.setMock('getWebappOrigin', function(){
+            return 'http://www2.gameasy.com';
+        });
+
+        Stargate.initialize()
+        .then(() => Stargate.getInfo())
         .then((info) => {
             
             expect(info).toBeDefined();
@@ -81,6 +87,7 @@ describe('Stargate public interface tests no hybrid', () => {
     });
 
     it('Stargate.getInfo hybrid false, online true', (done) => {
+        
         Stargate.setMock('isHybrid', () => false);
 
         Stargate.setMock('netInfoIstance', {
@@ -89,8 +96,13 @@ describe('Stargate public interface tests no hybrid', () => {
                 return { type: 'online', networkState: 'none' };
             }
         });
+        
+        Stargate.setMock('getWebappOrigin', function(){
+            return 'http://www2.gameasy.com';
+        });
 
         function JSONPRequestMock(){
+            console.log(arguments);
             this.prom = Promise.resolve({
                 response: {
                     realIp: '213.213.84.212',
@@ -183,8 +195,8 @@ describe('Stargate public interface tests hybrid', () => {
         .then((dirEntry) => 
             utils.createFileWithContent(dirEntry.toURL(), 
                             'manifest.json', 
-                            JSON.stringify(manifestJSON))
-        ).then((results) => {
+                            JSON.stringify(manifestJSON)))
+        .then((results) => {
             filepath = results.toURL();
             var dir = filepath.split('www')[0];
             window.cordova.file.applicationDirectory = dir;
