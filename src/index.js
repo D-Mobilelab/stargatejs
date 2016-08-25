@@ -335,7 +335,7 @@ function getDomainWithCountry(){
     if (NET_INFO.domain) {
         return NET_INFO.domain;
     }
-    Logger.warn('Can\'t get the domain. have you called Stargate.getInfo first ?');
+    LOG.warn('Can\'t get the domain. have you called Stargate.getInfo first ?');
     return '';
 }
 
