@@ -152,7 +152,18 @@ describe('Stargate public interface tests hybrid', () => {
 
     it('Test public method interface', () => {
         expect(Stargate).toBeDefined();
-        expect(Stargate.initialize).toBeDefined();        
+        expect(Stargate.initialize).toBeDefined();
+        console.log(Stargate.game);
+        expect(Stargate.game).toBeDefined();
+        expect(Stargate.game.buildGameOver).toBeDefined();
+        expect(Stargate.game.initialize).toBeDefined();
+        expect(Stargate.game.needsUpdate).toBeDefined();
+        expect(Stargate.game.getBundleGameObjects).toBeDefined();
+        expect(Stargate.game.download).toBeDefined();
+        expect(Stargate.game.remove).toBeDefined();
+        expect(Stargate.game.removeAll).toBeDefined();
+        expect(Stargate.game.list).toBeDefined();    
+        expect(Stargate.game.isGameDownloaded).toBeDefined();
     });
 
     it('Test isHybrid false', () => {
