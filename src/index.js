@@ -328,11 +328,15 @@ function getInfo() {
     // online? get it and save it if hybrid
     if (netInfoIstance.checkConnection().type === 'online'){
         return new JSONPRequest(url, 5000).prom.then((resp) => {
-            NET_INFO = resp;
-            var splitted = NET_INFO.domain.match(countryCodeRegex);
-
-            NET_INFO.domain = splitted[1];
-            NET_INFO.countryCode = splitted[2];
+            NET_INFO = resp;                        
+            
+            if (NET_INFO.worldwide === '1'){
+                var splitted = NET_INFO.domain.match(countryCodeRegex);
+                NET_INFO.domain = splitted[1];
+                NET_INFO.countryCode = splitted[2];
+            } else {
+                NET_INFO.countryCode = '';
+            }
 
             if (isHybrid()){
                 var OFFLINE_DATA_PATH = [stargateModules.game.BASE_DIR, 'netinfo.json'].join('');
