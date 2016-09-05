@@ -345,7 +345,20 @@ File.createFile = function(directory, filename){
  * @returns {Promise<Object|FileError>}
  * */
 File.write = function(filepath, content){
-    return File.appendToFile(filepath, content, true);
+    return File.fileExists(filepath).then((exists) => {
+        if (!exists){
+            var splitted = filepath.split('/');
+            
+            // this returns a new array and rejoin the path with /
+            var folder = splitted.slice(0, splitted.length - 1).join('/');
+            var filename = splitted[splitted.length - 1];
+
+            return File.createFile(folder, filename).then(function(entry){
+                return File.appendToFile(entry.path, content, true);                 
+            });
+        }
+        return File.appendToFile(filepath, content, true);
+    });
 };
 
 /**
