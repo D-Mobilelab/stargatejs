@@ -9,7 +9,7 @@
  * @throws {Error}
  * @returns {Function} 
  */
-function requireCondition(param, afterFunction, context = null, message, type, logger){ 
+function requireCondition(param, afterFunction, context = null, message, type, logger = window.console){ 
 	return function decorator(){
 		let _param;
         
