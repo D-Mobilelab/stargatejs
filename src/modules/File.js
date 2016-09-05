@@ -455,14 +455,14 @@ function __transform(entries){
 }
 
 function checkPlugins(){
-    return window.resolveLocalFileSystemURL && window.zip;
+    return window.resolveLocalFileSystemURL;
 }
 
 Object.keys(File).map((methodName) => {
     File[methodName] = requireCondition(checkPlugins, 
                                         File[methodName], 
                                         null,
-                                        'Check cordova-plugin-file and zip', 
+                                        'cordova-plugin-file missing', 
                                         'warn');
 });
 
