@@ -85,7 +85,11 @@ function initialize(configuration = {}, callback = function(){}){
         .then((results) => {
             
             // get the manifest and return the results without it
-            STARGATE_MANIFEST = results.shift();// here we have the manifest            
+            STARGATE_MANIFEST = results.shift(); // here we have the manifest
+
+            var hostname = getWebappOrigin().split('http://')[1];
+            setProperty(window.location, '__hostname__', hostname);
+
             callback(results);            
             return results;            
         })
@@ -102,6 +106,15 @@ function initialize(configuration = {}, callback = function(){}){
         initialized = true;
         isStargateOpen = true;              
         return results;
+    });
+}
+
+function setProperty(what, property, value){
+    Object.defineProperty(what, property, {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: value
     });
 }
 
@@ -322,16 +335,32 @@ function getInfo() {
             NET_INFO.countryCode = splitted[2];
 
             if (isHybrid()){
+                var OFFLINE_DATA_PATH = [stargateModules.game.BASE_DIR, 'netinfo.json'].join('');
                 LOG.log('Saving response:', NET_INFO);
-                // Save it but don't wait to finish
-                fileModule.write([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'), JSON.stringify(NET_INFO));                            
+                
+                fileModule.fileExists(OFFLINE_DATA_PATH)
+                    .then((exists) => { 
+                        if (!exists) { 
+                            return fileModule.write(OFFLINE_DATA_PATH, JSON.stringify({})); 
+                        } else { return Promise.resolve(); }
+                    })
+                    .then(() => fileModule.readFileAsJSON(OFFLINE_DATA_PATH))
+                    .then((offlineData) => {
+                        offlineData.net_info = NET_INFO;
+                        return offlineData;
+                    })
+                    .then((offlineDataUpdated) => {
+                        LOG.log('writing netinfo.json', offlineDataUpdated);
+                        return fileModule.write(OFFLINE_DATA_PATH, JSON.stringify(offlineDataUpdated));
+                    });
             }
             return NET_INFO;
         });
-    // offline? if hybrid read it from file
     } else {
+        // offline? if hybrid read it from file
         if (isHybrid()){
-            return fileModule.readFileAsJSON([stargateModules.game.BASE_DIR, 'netinfo.json'].join('/'));
+            var OFFLINE_DATA_PATH = [stargateModules.game.BASE_DIR, 'netinfo.json'].join('');
+            return fileModule.readFileAsJSON(OFFLINE_DATA_PATH).then((offlineData) => offlineData.net_info);
         }
         return Promise.resolve(NET_INFO);
     }    
