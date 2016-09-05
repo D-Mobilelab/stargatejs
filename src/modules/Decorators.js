@@ -11,10 +11,15 @@
  */
 function requireCondition(param, afterFunction, context = null, message, type, logger){ 
 	return function decorator(){
-        if (typeof param === 'function'){
-            param = param.call(null);
-        }
-		if (param){
+		let _param;
+        
+		if (typeof param === 'function'){
+            _param = param.call(null);
+        } else if(typeof param === 'boolean') {
+			_param = param ? true : false;
+		}
+		
+		if (_param){
 			return afterFunction.apply(context, arguments); 
 		} else {
 			switch (type){

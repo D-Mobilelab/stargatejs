@@ -67,8 +67,8 @@ function initialize(configuration = {}, callback = function(){}){
 
             // Reject the promise after 5s
             setTimeout(() => { 
-                isStargateOpen = false;
-                initialized = false;
+                // isStargateOpen = false;
+                // initialized = false;
                 reject(['deviceready timeout', CUSTOM_CONF.DEVICE_READY_TIMEOUT].join(' ')); 
             }, CUSTOM_CONF.DEVICE_READY_TIMEOUT);
 
@@ -171,8 +171,7 @@ function isInitialized(){
  */
 function isHybrid(){
     
-    // Check url for hybrid query param
-    
+    // Check url for hybrid query param    
     var location = window.document.location;
     if (process.env.NODE_ENV === 'development' && window.fakewindow) { 
         location = window.fakewindow.document.location;
@@ -397,7 +396,7 @@ function goToWebIndex(){
 }
 
 
-var Stargate = {
+const Stargate = {
     initialize,
     getVersion,
     getVersionBuild, 
@@ -500,7 +499,7 @@ if (process.env.NODE_ENV === 'development') {
                     return;
                     break;
             }
-    }
+    };
 }
 
 export default Stargate;
