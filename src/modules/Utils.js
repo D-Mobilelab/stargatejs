@@ -114,6 +114,10 @@ function extend(o1, o2){
 
     for (var j in o2) {
         if (o2.hasOwnProperty(j)){
+            if( Array.isArray(o1[j]) && Array.isArray(o2[j]) ){
+                newObject[j] = o1[j].concat(o2[j]);
+                continue;               
+            } 
             newObject[j] = o2[j];
         }
     }
