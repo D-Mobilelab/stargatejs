@@ -335,11 +335,13 @@ function getInfo() {
                 NET_INFO.domain = splitted[1];
                 NET_INFO.countryCode = splitted[2];
             } else {
+                // cut last char /
+                NET_INFO.domain = NET_INFO.domain.slice(0, NET_INFO.domain.length - 1);
                 NET_INFO.countryCode = '';
             }
 
             if (isHybrid()){
-                var OFFLINE_DATA_PATH = [stargateModules.game.BASE_DIR, 'netinfo.json'].join('');
+                var OFFLINE_DATA_PATH = [stargateModules.file.BASE_DIR, 'netinfo.json'].join('');
                 LOG.log('Saving response:', NET_INFO);
                 
                 fileModule.fileExists(OFFLINE_DATA_PATH)
@@ -363,7 +365,7 @@ function getInfo() {
     } else {
         // offline? if hybrid read it from file
         if (isHybrid()){
-            var OFFLINE_DATA_PATH = [stargateModules.game.BASE_DIR, 'netinfo.json'].join('');
+            var OFFLINE_DATA_PATH = [stargateModules.file.BASE_DIR, 'netinfo.json'].join('');
             return fileModule.readFileAsJSON(OFFLINE_DATA_PATH).then((offlineData) => offlineData.net_info);
         }
         return Promise.resolve(NET_INFO);
@@ -376,10 +378,10 @@ function getInfo() {
  * @returns {String}
  */
 function getCountryCode(){
-    if (NET_INFO.countryCode) {
+    if (typeof NET_INFO.countryCode === 'string') {
         return NET_INFO.countryCode;
     }
-    LOG.warn('Can\'t get the domain. have you called Stargate.getInfo first ?');
+    LOG.warn('Can\'t get the country code. have you called Stargate.getInfo first ?');
     return '';
 }
 
