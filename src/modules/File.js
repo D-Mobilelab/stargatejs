@@ -34,6 +34,32 @@ File.ERROR_MAP = {
 
 File.currentFileTransfer = null;
 
+File.initialize = function(){
+    var baseDir = '',
+        cacheDir = '',
+        tempDirectory = '',
+        wwwDir = '', 
+        dataDir = '';
+
+    try {
+        baseDir = window.cordova.file.applicationStorageDirectory;
+        cacheDir = window.cordova.file.cacheDirectory;
+        tempDirectory = window.cordova.file.tempDirectory;
+        wwwDir = window.cordova.file.applicationDirectory + 'www/';        
+        dataDir = window.cordova.file.dataDirectory;
+    } catch (reason){
+        LOG.error(reason);
+        return Promise.reject(reason);
+    }
+
+    if (window.device.platform.toLowerCase() === 'ios'){ baseDir += 'Documents/'; }
+    if (window.device.platform.toLowerCase() === 'android'){ tempDirectory = cacheDir; }
+
+    File.BASE_DIR = baseDir;    
+    File.OFFLINE_INDEX = wwwDir + 'index.html';
+    return Promise.resolve();
+}
+
 /**
  * File.resolveFS
  *
