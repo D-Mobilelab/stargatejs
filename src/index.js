@@ -1,5 +1,6 @@
 require('babel-polyfill');
 var Logger = require('./modules/Logger');
+var Utils = require('./modules/Utils');
 var extend = require('./modules/Utils').extend;
 var dequeryfy = require('./modules/Utils').dequeryfy;
 var queryfy = require('./modules/Utils').queryfy;
@@ -8,7 +9,7 @@ var JSONPRequest = require('http-francis').JSONPRequest;
 // var Http = require('http-francis').Http;
 const API_URL_NET_INFO = require('./modules/Constants').API_URL_NET_INFO;
 var NET_INFO = {};
-
+var VHOST = {};
 var requireCondition = require('./modules/Decorators').requireCondition;
 var FacebookClass = require('./modules/Facebook');
 var Facebook = new FacebookClass();
@@ -93,7 +94,7 @@ function initialize(configuration = {}, callback = function(){}){
             callback(results);            
             return results;            
         })
-        .then(getInfo);
+        .then(loadVHost);
         
     } else {
         LOG.info('No hybrid init');
@@ -302,86 +303,33 @@ function getWebappOrigin() {
 }
 
 /**
- * getInfo
- * returns somenthing like that
- * <pre>
- * {
-    realIp: "213.213.84.212",
-    realCountry: "it",
-    throughput: "vhigh",
-    bandwidth: "5000",
-    network: "bt",
-    networkType: "",
-    worldwide: "1",
-    country: "xx",
-    domain: "http://www2.gameasy.com/ww-it/"
-    }
- *</pre>
- * @returns {Promise<Object>}
+ * load config.json, vhost, saved by the webapp
+ * @returns {Promise}
  */
-function getInfo() {
-    var countryCodeRegex = /(http:\/\/[\w]{3,4}\..*\.[\w]{2,})\/(.*)\//;
-    if (Object.getOwnPropertyNames(NET_INFO).length > 0){
-        return Promise.resolve(NET_INFO);
-    }
-    var url = queryfy([getWebappOrigin(), API_URL_NET_INFO].join(''), { format: 'jsonp' });
-    // online? get it and save it if hybrid
-    if (netInfoIstance.checkConnection().type === 'online'){
-        return new JSONPRequest(url, 5000).prom.then((resp) => {
-            NET_INFO = resp;                        
-            
-            if (NET_INFO.worldwide === '1'){
-                var splitted = NET_INFO.domain.match(countryCodeRegex);
-                NET_INFO.domain = splitted[1];
-                NET_INFO.countryCode = splitted[2];
+function loadVHost(){
+    var VHOST_PATH = [stargateModules.file.BASE_DIR, 'config.json'].join('');
+    return fileModule.fileExists(VHOST_PATH)
+        .then((exists) => {
+            if (exists){
+                return fileModule.readFileAsJSON(VHOST_PATH).then((vhost) => { VHOST = vhost; });                
             } else {
-                // cut last char /
-                NET_INFO.domain = NET_INFO.domain.slice(0, NET_INFO.domain.length - 1);
-                NET_INFO.countryCode = '';
+                LOG.warn('config.json not exists (vhost) if you are on gameasy it\'s a problem');
+                return Promise.resolve({});
             }
-
-            if (isHybrid()){
-                var OFFLINE_DATA_PATH = [stargateModules.file.BASE_DIR, 'netinfo.json'].join('');
-                LOG.log('Saving response:', NET_INFO);
-                
-                fileModule.fileExists(OFFLINE_DATA_PATH)
-                    .then((exists) => { 
-                        if (!exists) { 
-                            return fileModule.write(OFFLINE_DATA_PATH, JSON.stringify({})); 
-                        } else { return Promise.resolve(); }
-                    })
-                    .then(() => fileModule.readFileAsJSON(OFFLINE_DATA_PATH))
-                    .then((offlineData) => {
-                        offlineData.net_info = NET_INFO;
-                        return offlineData;
-                    })
-                    .then((offlineDataUpdated) => {
-                        LOG.log('writing netinfo.json', offlineDataUpdated);
-                        return fileModule.write(OFFLINE_DATA_PATH, JSON.stringify(offlineDataUpdated));
-                    });
-            }
-            return NET_INFO;
-        });
-    } else {
-        // offline? if hybrid read it from file
-        if (isHybrid()){
-            var OFFLINE_DATA_PATH = [stargateModules.file.BASE_DIR, 'netinfo.json'].join('');
-            return fileModule.readFileAsJSON(OFFLINE_DATA_PATH).then((offlineData) => offlineData.net_info);
-        }
-        return Promise.resolve(NET_INFO);
-    }    
+        });    
 }
 
 /**
- * Get the country code loaded by getInfo call
- * @sync
+ * Get the country code
+ *
  * @returns {String}
  */
 function getCountryCode(){
-    if (typeof NET_INFO.countryCode === 'string') {
-        return NET_INFO.countryCode;
+    var countryCodeRegex = /(http:\/\/[\w]{3,4}\..*\.[\w]{2,})\/(.*)\//;
+    if (VHOST.DEST_DOMAIN && (typeof VHOST.DEST_DOMAIN === 'string')) {
+        return VHOST.DEST_DOMAIN.match(countryCodeRegex)[2];
     }
-    LOG.warn('Can\'t get the country code. have you called Stargate.getInfo first ?');
+    LOG.warn('Can\'t get the country code. have you called');
     return '';
 }
 
@@ -434,9 +382,8 @@ function goToWebIndex(){
 const Stargate = {
     initialize,
     getVersion,
-    getVersionBuild, 
-    getInfo,
-    getCountryCode,   
+    getCountryCode,
+    getVersionBuild,
     facebookShare: Facebook.facebookShare,
     facebookLogin: Facebook.facebookLogin,
     addListener: requireCondition(isInitialized, 
@@ -463,7 +410,8 @@ const Stargate = {
     getWebappStartUrl: requireCondition(isInitialized, getWebappStartUrl, null, MESSAGE_INITIALIZED, 'warn', LOG),
     getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
-    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG)    
+    goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
+    Utils   
 };
 
 if (process.env.NODE_ENV === 'development') {

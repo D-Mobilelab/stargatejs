@@ -61,59 +61,6 @@ describe('Stargate public interface tests no hybrid', () => {
             done();
         });    
     });
-
-    it('Stargate.getInfo hybrid true, online true', (done) => {
-        
-        Stargate.setMock('isHybrid', () => true);
-
-        Stargate.setMock('netInfoIstance', {
-            initialize: function(){},
-            checkConnection: function(){
-                return { type: 'online', networkState: 'none' };
-            }
-        });
-        
-        Stargate.setMock('getWebappOrigin', function(){
-            return 'http://www2.gameasy.com';
-        });
-
-        Stargate.setMock('fileModule', {
-            write: function(){
-                console.log('Write:', arguments);
-            },
-            readFileAsJSON: function(){
-                console.log('readFileAsJSON:', arguments);
-                return Promise.resolve({});
-            }
-        });
-
-        function JSONPRequestMock(){
-            console.log(arguments);
-            this.prom = Promise.resolve({                
-                    realIp: '213.213.84.212',
-                    realCountry: 'it',
-                    throughput: 'vhigh',
-                    bandwidth: '5000',
-                    network: 'bt',
-                    networkType: '',
-                    worldwide: '1',
-                    country: 'xx',
-                    domain: 'http://www2.gameasy.com/ww-it/'                
-            });
-        }
-        Stargate.setMock('JSONPRequest', JSONPRequestMock);
-
-        Stargate.initialize()            
-            .then(() => {
-                expect(Stargate.getCountryCode()).toEqual('ww-it');
-                // call it after initialize should return immediately
-                Stargate.getInfo().then((resp) => {
-                    expect(resp.domain).toEqual('http://www2.gameasy.com');
-                    expect(resp.countryCode).toEqual('ww-it');
-                });
-                done();
-            });
-    });
 });
 
 describe('Stargate public interface tests hybrid', () => {
