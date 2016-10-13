@@ -362,7 +362,7 @@ function loadUrl(url){
 function goToLocalIndex(){
     if (getType(window.cordova.file.applicationDirectory) !== 'undefined'){
         var qs = { hybrid: 1 };
-        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/index.html`;
+        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory} www/${STARGATE_MANIFEST.stargateConf.start_url}`;
         loadUrl(queryfy(LOCAL_INDEX, qs));
     } else {
         LOG.warn('Missing cordova-plugin-file. Install it with: cordova plugin add cordova-plugin-file');
@@ -411,7 +411,7 @@ const Stargate = {
     getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
-    Utils   
+    Utils 
 };
 
 if (process.env.NODE_ENV === 'development') {
