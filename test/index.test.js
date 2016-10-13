@@ -128,36 +128,26 @@ describe('Stargate public interface tests hybrid', () => {
     });
 
     it('Initialize hybrid should wait deviceready', (done) => {
-        var filepath = '';
         expect(window.cordova.file).toBeDefined();
-        
-        // Create directory and manifest.json
-        utils.createDir(window.cordova.file.applicationStorageDirectory, 'www')
-        .then((dirEntry) => 
-            utils.createFileWithContent(dirEntry.toURL(), 
-                            'manifest.json', 
-                            JSON.stringify(manifestJSON)))
-        .then((results) => {
-            filepath = results.toURL();
-            var dir = filepath.split('www')[0];
-            window.cordova.file.applicationDirectory = dir;
+        Stargate.setMock('getManifest', () => Promise.resolve(manifestJSON));
+        Stargate.setMock('loadVHost', () => Promise.resolve({}));
 
-            console.log('Manifest:', results, filepath, dir);
-            localStorage.setItem('hybrid', 1);
-            
-            Stargate.initialize().then((_results) => {                
-                expect(_results).toBeDefined();
-                expect(Stargate.getWebappStartUrl()).toEqual('http://www2.gameasy.com/?hybrid=1&stargateVersion=4');
-                expect(Stargate.getWebappOrigin()).toEqual('http://www2.gameasy.com');
-                utils.removeFile(filepath);                 
-                done(); 
-            }).catch((reason) => {
-                console.log(reason);
-                expect(reason).not.toBeDefined();
-                utils.removeFile(filepath);
-                done();                    
-            });
-        });       
+        Stargate.initialize()
+        .then((_results) => {                  
+            expect(_results).toBeDefined();
+            expect(Stargate.getWebappStartUrl()).toEqual('http://www2.gameasy.com/?hybrid=1&stargateVersion=4');
+            expect(Stargate.getWebappOrigin()).toEqual('http://www2.gameasy.com');
+            expect(Stargate.goToLocalIndex()).toEqual(`${window.cordova.file.applicationDirectory}www/${manifestJSON.stargateConf.start_url}`);
+            Stargate.unsetMock('getManifest');
+            Stargate.unsetMock('loadVHost');            
+            done();
+        })
+        .catch((reason) => {
+            expect(reason).not.toBeDefined();
+            Stargate.unsetMock('getManifest');
+            Stargate.unsetMock('loadVHost');         
+            done();                    
+        });
         
     });
 });

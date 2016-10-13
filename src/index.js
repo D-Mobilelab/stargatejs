@@ -86,8 +86,7 @@ function initialize(configuration = {}, callback = function(){}){
         .then((results) => {
             
             // get the manifest and return the results without it
-            STARGATE_MANIFEST = results.shift(); // here we have the manifest
-
+            STARGATE_MANIFEST = results.shift(); // here we have the manifest            
             var hostname = getWebappOrigin().split('http://')[1];
             setProperty(window.location, '__hostname__', hostname);
 
@@ -276,7 +275,7 @@ function getManifest() {
  * or empty string before initialization
  * @returns {string}
  */
-function getWebappStartUrl(){
+function getWebappStartUrl(){    
     if (typeof STARGATE_MANIFEST.stargateConf.webapp_start_url !== 'undefined') {
         return queryfy(STARGATE_MANIFEST.stargateConf.webapp_start_url, 
                        { hybrid: 1,
@@ -362,8 +361,9 @@ function loadUrl(url){
 function goToLocalIndex(){
     if (getType(window.cordova.file.applicationDirectory) !== 'undefined'){
         var qs = { hybrid: 1 };
-        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory} www/${STARGATE_MANIFEST.stargateConf.start_url}`;
+        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/${STARGATE_MANIFEST.stargateConf.start_url}`;
         loadUrl(queryfy(LOCAL_INDEX, qs));
+        return LOCAL_INDEX;
     } else {
         LOG.warn('Missing cordova-plugin-file. Install it with: cordova plugin add cordova-plugin-file');
     }
@@ -449,6 +449,14 @@ if (process.env.NODE_ENV === 'development') {
                 original.getWebappOrigin = getWebappOrigin;
                 getWebappOrigin = mock;
                 break;
+            case 'getManifest':
+                original.getManifest = getManifest;
+                getManifest = mock;
+                break;
+            case 'loadVHost':
+                original.loadVHost = loadVHost;
+                loadVHost = mock;
+                break;
             default:
                 console.log('No mock rule for ' + moduleName);
                 break;
@@ -456,7 +464,7 @@ if (process.env.NODE_ENV === 'development') {
     };
 
     Stargate.unsetMock = function(moduleName){
-        if (!original[moduleName]) return;
+            if (!original[moduleName]) return;
             switch(moduleName){
                 case 'fileModule':
                     fileModule = original.fileModule;
@@ -477,9 +485,16 @@ if (process.env.NODE_ENV === 'development') {
                 case 'getWebappOrigin':
                     getWebappOrigin = original.getWebappOrigin;
                     original.getWebappOrigin = null;
-                    break;                
-                default:
-                    return;
+                    break;
+                case 'getManifest':
+                    getManifest = original.getManifest;
+                    original.getManifest = null;
+                    break;
+                case 'loadVHost':
+                    loadVHost = original.loadVHost;
+                    original.loadVHost = null;
+                    break;
+                default:                    
                     break;
             }
     };
