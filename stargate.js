@@ -8434,7 +8434,6 @@ function initialize() {
             return Promise.all(modulesLoaded);
         }).then(function (results) {
             STARGATE_MANIFEST = results.shift();
-
             var hostname = getWebappOrigin().split('http://')[1];
             setProperty(window.location, '__hostname__', hostname);
 
@@ -8628,8 +8627,9 @@ function loadUrl(url) {
 function goToLocalIndex() {
     if (getType(window.cordova.file.applicationDirectory) !== 'undefined') {
         var qs = { hybrid: 1 };
-        var LOCAL_INDEX = window.cordova.file.applicationDirectory + 'www/index.html';
+        var LOCAL_INDEX = window.cordova.file.applicationDirectory + 'www/' + STARGATE_MANIFEST.stargateConf.start_url;
         loadUrl(queryfy(LOCAL_INDEX, qs));
+        return LOCAL_INDEX;
     } else {
         LOG.warn('Missing cordova-plugin-file. Install it with: cordova plugin add cordova-plugin-file');
     }
@@ -8698,6 +8698,14 @@ if ("production" === 'development') {
                 original.getWebappOrigin = getWebappOrigin;
                 getWebappOrigin = mock;
                 break;
+            case 'getManifest':
+                original.getManifest = getManifest;
+                getManifest = mock;
+                break;
+            case 'loadVHost':
+                original.loadVHost = loadVHost;
+                loadVHost = mock;
+                break;
             default:
                 console.log('No mock rule for ' + moduleName);
                 break;
@@ -8727,8 +8735,15 @@ if ("production" === 'development') {
                 getWebappOrigin = original.getWebappOrigin;
                 original.getWebappOrigin = null;
                 break;
+            case 'getManifest':
+                getManifest = original.getManifest;
+                original.getManifest = null;
+                break;
+            case 'loadVHost':
+                loadVHost = original.loadVHost;
+                original.loadVHost = null;
+                break;
             default:
-                return;
                 break;
         }
     };
@@ -8962,6 +8977,14 @@ var EventBus = function () {
 					this.events[eventType].splice(i, 1);
 				}
 			}
+		}
+	}, {
+		key: "clear",
+		value: function clear(eventType) {
+			if (!this.events[eventType]) {
+				return;
+			}
+			this.events[eventType] = [];
 		}
 	}]);
 
@@ -10120,10 +10143,17 @@ var Logger = function () {
             OFF: 0
         };
 
-        this.setLevel(label);
+        this.level = this.levels[label.toUpperCase()];
         this.styles = styles;
         this.tag = '%c' + tag;
         this.styleString = 'background:' + this.styles.background + ';color:' + this.styles.color + ';';
+
+        this.info = this.info.bind(this);
+        this.warn = this.warn.bind(this);
+        this.log = this.log.bind(this);
+        this.error = this.error.bind(this);
+        this.setLevel = this.setLevel.bind(this);
+        this.__processArguments = this.__processArguments.bind(this);
     }
 
     _createClass(Logger, [{
