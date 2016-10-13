@@ -21,11 +21,18 @@ class Logger{
             DEBUG: 4,
             OFF: 0
         };
-
-        this.setLevel(label);
+        
+        this.level = this.levels[label.toUpperCase()];
         this.styles = styles;
         this.tag = `%c${tag}`;
         this.styleString = `background:${this.styles.background};color:${this.styles.color};`;
+
+        this.info = this.info.bind(this);
+        this.warn = this.warn.bind(this);
+        this.log = this.log.bind(this);
+        this.error = this.error.bind(this);
+        this.setLevel = this.setLevel.bind(this);
+        this.__processArguments = this.__processArguments.bind(this);
     }
 
     info(){
@@ -51,13 +58,13 @@ class Logger{
             console.error.apply(console, this.__processArguments(arguments));
         }
     }
-
+    
     setLevel(label){
         this.level = this.levels[label.toUpperCase()];
     }
 
     __processArguments(args){
-        var _args = [].slice.call(args);
+        let _args = [].slice.call(args);
         _args.unshift(this.styleString);
         _args.unshift(this.tag);
         return _args;
