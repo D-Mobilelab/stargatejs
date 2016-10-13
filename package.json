@@ -21,10 +21,10 @@
     "gendocs": "npm run clean:docs && node setdocspath.js docs/$npm_package_version && esdoc -c esdoc.json",
     "test": "export NODE_ENV=development && npm run clean && karma start --no-auto-watch --single-run",
     "test:watch": "export NODE_ENV=development && karma start --browsers Chrome",
+    "deploy": "gh-pages -d dist",
     "preversion": "npm run test",
     "version": "npm run build:prod && npm run gendocs",
-    "postversion": "git push origin && git push --tags && npm run gh-deploy",
-    "gh-deploy": "git subtree push --prefix dist/ docs/ origin gh-pages",
+    "postversion": "git push origin && git push --tags && cp dist/*.* dist/$npm_package_version/ && npm run deploy",
     "serve": "http-server . -o"
   },
   "devDependencies": {
@@ -45,6 +45,7 @@
     "eslint-plugin-import": "^1.9.2",
     "eslint-plugin-jsx-a11y": "^1.5.3",
     "eslint-plugin-react": "^5.2.2",
+    "gh-pages": "^0.11.0",
     "isparta": "^4.0.0",
     "istanbul": "^0.4.3",
     "istanbul-instrumenter-loader": "^0.2.0",
