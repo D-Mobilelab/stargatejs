@@ -931,7 +931,7 @@ Game.prototype.getBundleGameObjects = function(){
  * checks if there's or not a new version for the game(it makes a call to the api)
  *
  * @param {String} gameId - the gameId
- * @param {Promise<Boolean>}
+ * @returns {Promise<Boolean>}
  * */
 Game.prototype.needsUpdate = function(gameId){
     var oldMd5 = '';
