@@ -44,6 +44,16 @@ class EventBus {
 			}
 		}
 	}
+
+	/**
+	 * clear all the functions associated at the specific eventType
+	 * if the event not exists nothing happens
+	 * @param {String} eventType 
+	 */
+	clear(eventType){
+		if (!this.events[eventType]){ return; }
+		this.events[eventType] = [];
+	}
 }
 
 module.exports = EventBus;
