@@ -361,7 +361,7 @@ function loadUrl(url){
 function goToLocalIndex(){
     if (getType(window.cordova.file.applicationDirectory) !== 'undefined'){
         var qs = { hybrid: 1 };
-        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/${STARGATE_MANIFEST.stargateConf.start_url}`;
+        var LOCAL_INDEX = `${window.cordova.file.applicationDirectory}www/${STARGATE_MANIFEST.start_url}`;
         loadUrl(queryfy(LOCAL_INDEX, qs));
         return LOCAL_INDEX;
     } else {
