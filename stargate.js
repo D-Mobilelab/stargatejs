@@ -8359,6 +8359,13 @@ process.umask = function() { return 0; };
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _EventBus = require('./modules/EventBus');
+
+var _EventBus2 = _interopRequireDefault(_EventBus);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 require('babel-polyfill');
 var Logger = require('./modules/Logger');
 var Utils = require('./modules/Utils');
@@ -8660,7 +8667,8 @@ var Stargate = {
     getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
-    Utils: Utils
+    Utils: Utils,
+    EventBus: _EventBus2.default
 };
 
 if ("production" === 'development') {
@@ -8752,7 +8760,7 @@ if ("production" === 'development') {
 exports.default = Stargate;
 module.exports = exports['default'];
 
-},{"./info":305,"./modules/Connection":306,"./modules/Constants":307,"./modules/Decorators":308,"./modules/Facebook":310,"./modules/File":311,"./modules/Game":312,"./modules/Logger":313,"./modules/Utils":314,"./stargate.conf.js":315,"babel-polyfill":1,"cookies-js":2,"http-francis":297}],305:[function(require,module,exports){
+},{"./info":305,"./modules/Connection":306,"./modules/Constants":307,"./modules/Decorators":308,"./modules/EventBus":309,"./modules/Facebook":310,"./modules/File":311,"./modules/Game":312,"./modules/Logger":313,"./modules/Utils":314,"./stargate.conf.js":315,"babel-polyfill":1,"cookies-js":2,"http-francis":297}],305:[function(require,module,exports){
 "use strict";
 
 var pkgInfo = { "version": "0.1.4", "build": "v0.1.4-0-gb7ec797" };module.exports = pkgInfo;
@@ -8957,7 +8965,7 @@ var EventBus = function () {
 	}, {
 		key: "trigger",
 		value: function trigger(eventType) {
-			if (!this.events[eventType] || this.events[eventType] < 1) {
+			if (!this.events[eventType] || this.events[eventType].length === 0) {
 				return;
 			}
 			var args = [].slice.call(arguments, 1);
@@ -8972,11 +8980,14 @@ var EventBus = function () {
 				return;
 			}
 
-			for (var i = this.events[eventType].length - 1; i >= 0; i--) {
-				if (this.events[eventType][i].func === func) {
-					this.events[eventType].splice(i, 1);
+			var newState = this.events[eventType].reduceRight(function (prev, current, index, arr) {
+				if (current.func !== func) {
+					prev.push(current);
 				}
-			}
+				return prev;
+			}, []);
+
+			this.events[eventType] = newState;
 		}
 	}, {
 		key: "clear",
