@@ -23,7 +23,7 @@ class EventBus {
 	 * @param {String} eventType - the eventType to trigger. if not exists nothing happens 
 	 */
 	trigger(eventType){
-		if (!this.events[eventType] || this.events[eventType] < 1){ return; }
+		if (!this.events[eventType] || this.events[eventType].length === 0){ return; }
 		var args = [].slice.call(arguments, 1);
 		this.events[eventType].map((obj) => {
 			obj.func.apply(obj.context, args);
@@ -38,11 +38,14 @@ class EventBus {
 	off(eventType, func){
 		if (!this.events[eventType]){ return; }
 
-		for (var i = this.events[eventType].length - 1; i >= 0; i--){
-			if (this.events[eventType][i].func === func){
-				this.events[eventType].splice(i, 1);
-			}
-		}
+		let newState = this.events[eventType].reduceRight((prev, current, index, arr) => {
+			if(current.func !== func){
+				prev.push(current);
+			} 
+			return prev;
+		}, []);
+
+		this.events[eventType] = newState;		
 	}
 
 	/**

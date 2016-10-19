@@ -24,7 +24,7 @@ var netInfoIstance = new NetworkInfo();
 
 var cookies = require('cookies-js');
 var DEFAULT_CONFIGURATION = require('./stargate.conf.js');
-// import bus from './modules/EventBus';
+import EventBus from './modules/EventBus';
 
 var stargateModules = {
     file: fileModule,
@@ -411,7 +411,8 @@ const Stargate = {
     getWebappOrigin: requireCondition(isInitialized, getWebappOrigin, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToLocalIndex: requireCondition(isInitialized, goToLocalIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
     goToWebIndex: requireCondition(isInitialized, goToWebIndex, null, MESSAGE_INITIALIZED, 'warn', LOG),
-    Utils 
+    Utils,
+    EventBus
 };
 
 if (process.env.NODE_ENV === 'development') {

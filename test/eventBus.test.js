@@ -22,11 +22,13 @@ describe('EventBus tests', () => {
         eventBus.on('connectionchange', callbacks.callback);
         
         eventBus.trigger('connectionchange', 'param1', [], {});
+        eventBus.trigger('connectionchange', 'param2', [], {a: 1});
         
         expect(eventBus.events.connectionchange).toBeDefined();        
         expect(callbacks.callback).toHaveBeenCalled();
         expect(callbacks.callback).toHaveBeenCalledWith('param1', [], {});
-        expect(callbacks.callback).toHaveBeenCalledTimes(1);
+        expect(callbacks.callback).toHaveBeenCalledWith('param2', [], {a:1});
+        expect(callbacks.callback).toHaveBeenCalledTimes(2);
         
     });
 
