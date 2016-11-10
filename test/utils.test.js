@@ -17,6 +17,11 @@ describe('Utils tests', () => {
         var result = queryfy('', { a: 'b b', 'c': 'a' });
         expect(result).toBe('?a=b%20b&c=a');
     });
+
+    it('Test queryfy with 0 type number as value', () => {
+        var result = queryfy('', { a: 0, 'c': '0' });
+        expect(result).toBe('?a=0&c=0');
+    });
     
     it('Queryfy should work with a key with null value', () => {
         var result = queryfy('', { a: 'b b', 'c': null });

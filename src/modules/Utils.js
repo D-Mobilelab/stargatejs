@@ -53,7 +53,13 @@ function queryfy(_api, query){
     for (var key in finalQuery){                
         qs += encodeURIComponent(key);
         // if a value is null or undefined keep the key without value
-        if (finalQuery[key]){ qs += '=' + encodeURIComponent(finalQuery[key]); }
+        if(getType(finalQuery[key]) === 'number'){
+            finalQuery[key] = String(finalQuery[key]);
+        }
+        
+        if (finalQuery[key]){ 
+            qs += '=' + encodeURIComponent(finalQuery[key]); 
+        }
         qs += '&';
     }
     
