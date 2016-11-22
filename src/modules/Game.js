@@ -775,15 +775,28 @@ Game.prototype.buildGameOver = function(data){
         var htmlString = results[1];
         var metaJson = results[0];
         LOG.info('Meta JSON:', metaJson);
-        return htmlString
+        var newHtmlString = htmlString
                 .replace('{{score}}', data.score)
                 .replace('{{game_title}}', metaJson.title)
                 .replace('{{game_title}}', metaJson.title)
                 .replace('{{url_share}}', metaJson.url_share)
                 .replace('{{url_cover}}', metaJson.images.cover.ratio_1);
-                // .replace("{{startpage_url}}", constants.WWW_DIR + "index.html");
+        if(window.DICTIONARY){
+            return replaceAll(newHtmlString, window.DICTIONARY);
+        }
+        return newHtmlString;
     });
 };
+
+function replaceAll(str, obj){
+    var _str = str.slice();
+    var re;
+    for(var key in obj){
+        re = new RegExp('\{\{(' + key + ')\}\}', 'g');
+        _str = _str.replace(re, obj[key]);
+    }
+    return _str;
+}
 
 /**
  * isGameDownloaded
